@@ -7,6 +7,7 @@ import { useAuth } from '@/store/auth-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState, GlitchTitle, TerminalBlock } from '@/components/fx'
+import { NotificationsCard } from '@/components/Notifications'
 import type { LeaderboardRow } from '@/types'
 
 interface FeedRow {
@@ -18,13 +19,15 @@ interface FeedRow {
 
 const KIND_TEXT: Record<string, string> = {
   CHALLENGE_REWARD: 'recovered',
+  FIRST_BLOOD: 'took first blood on',
   ITEM_PURCHASE: 'acquired',
   MISSION_PURCHASE: 'deployed on',
   MISSION_REWARD: 'completed',
+  ENDGAME_REWARD: 'decrypted',
 }
 
 export function Home() {
-  const { wallet, state } = useGame()
+  const { wallet, state, endgame } = useGame()
   const { team } = useAuth()
 
   const { data: feed } = useQuery({
@@ -42,9 +45,8 @@ export function Home() {
   const solved = state?.solvedChallenges.length ?? 0
 
   return (
-    <div className="space-y-6">
-      {/* HERO */}
-      <section className="relative overflow-hidden border border-term/30 bg-gradient-to-b from-term/5 to-transparent px-6 py-10 text-center">
+    <div className="space-y-5">
+      <section className="relative overflow-hidden border border-term/30 bg-gradient-to-b from-term/5 to-transparent px-6 py-8 text-center sm:py-10">
         <h1 className="font-display text-4xl tracking-[0.2em] text-term text-glow sm:text-6xl">
           <GlitchTitle>CIT: 404</GlitchTitle>
         </h1>
@@ -56,7 +58,6 @@ export function Home() {
         </p>
       </section>
 
-      {/* STAT STRIP */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile icon={<Wallet className="size-4" />} label="Wallet" value={formatCIT(wallet.balance)} />
         <StatTile
@@ -73,17 +74,22 @@ export function Home() {
         />
         <StatTile
           icon={<Radio className="size-4" />}
-          label="Missions"
-          value={String(state?.missions.length ?? 0)}
+          label="Story"
+          value={`${endgame.total > 0 ? Math.round((endgame.solved / endgame.total) * 100) : 0}%`}
           tone="text-item"
         />
       </div>
 
+      {/* Admin messages, kept separate from the public activity feed. */}
+      <NotificationsCard />
+
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* NETWORK ACTIVITY */}
         <Card>
           <CardHeader>
-            <CardTitle>Network Activity</CardTitle>
+            <div>
+              <CardTitle>Network Activity</CardTitle>
+              <p className="mt-0.5 text-[11px] text-term/45">What every team is doing right now.</p>
+            </div>
             <Badge variant="muted">LIVE</Badge>
           </CardHeader>
           <CardContent className="space-y-2 p-3">
@@ -105,7 +111,6 @@ export function Home() {
           </CardContent>
         </Card>
 
-        {/* LEADERBOARD */}
         <Card>
           <CardHeader>
             <CardTitle>Recovery Standings</CardTitle>
@@ -128,6 +133,12 @@ export function Home() {
                       {row.rank}
                     </span>
                     <span className="flex-1 truncate font-bold">{row.team_name}</span>
+                    {row.first_bloods > 0 && (
+                      <span className="flex items-center gap-0.5 text-warn" title="First bloods">
+                        <Crown className="size-3" />
+                        {row.first_bloods}
+                      </span>
+                    )}
                     <span className="flex items-center gap-1 tabular-nums text-info">
                       <Zap className="size-3" />
                       {row.core_energy}

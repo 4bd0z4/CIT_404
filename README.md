@@ -238,19 +238,75 @@ Variables à définir côté backend : `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV=p
 
 ## 6. Pilotage pendant l'événement
 
-L'admin change la phase depuis la barre du haut :
+### Les phases s'excluent
 
-| Phase | Effet |
-| --- | --- |
-| `LOBBY` | Rien n'est ouvert |
-| `PHASE_I` | Digital Arena : challenges CP / CTF / DATA |
-| `PHASE_II` | Missions de terrain achetables |
-| `ENDGAME` | Séquence finale |
-| `CLOSED` | Marché fermé, classement figé |
+Une seule phase est jouable à la fois. Les onglets des autres s'affichent
+verrouillés, **et le backend refuse les requêtes correspondantes** — le cadenas
+n'est pas qu'une décoration. Au démarrage, tout est scellé (`LOBBY`).
 
-L'onglet **Missions** liste les missions en attente de validation terrain avec
-leur compte à rebours : *Pass* verse la récompense et l'énergie, *Fail*
-déclenche le remboursement d'assurance si l'équipe en avait acheté une. Les deux
-écrivent au ledger.
+| Phase | Ce qui s'ouvre | Chrono par défaut |
+| --- | --- | --- |
+| `LOBBY` | Rien | — |
+| `CHALLENGES` | Digital Arena : CP / CTF / DATA | 2 h |
+| `MISSIONS` | Missions de terrain | 3 h |
+| `ENDGAME` | Les six fragments finaux | 1 h 30 |
+| `CLOSED` | Marché fermé, classement figé | — |
+
+Basculer une phase relance son chrono. L'admin peut passer de l'une à l'autre à
+tout moment depuis la barre du haut ; les durées se modifient via
+`PATCH /api/admin/phase/:phase/duration`.
+
+### Challenges
+
+Chaque challenge rapporte des CIT$ **et** de l'énergie. La **première équipe**
+à résoudre un challenge déclenche une popup plein écran et touche une prime
+(≈ +50 % en CIT$ et en énergie). Le first blood est décidé côté serveur sous
+verrou de ligne : une égalité au millième de seconde ne peut pas produire deux
+gagnants.
+
+### Missions
+
+Le déroulé tient en quatre temps :
+
+1. L'équipe lit l'**intel de localisation** et part chercher le lieu.
+2. Sur place, un admin lui dicte le **code d'accès** (onglet Missions de
+   l'admin, bouton *Reveal codes*). L'item *Location Coordinates* révèle les
+   coordonnées mais **ne remplace pas le code** — il évite seulement de chercher
+   à l'aveugle.
+3. Le code saisi fait passer la boîte de déploiement de l'**ambre au vert**.
+4. L'équipe choisit une **difficulté** (EASY / MEDIUM / HARD) : plus c'est dur,
+   plus ça coûte et plus ça rapporte.
+
+L'ancienne case « assurance » a disparu : n'importe quel item applicable se pose
+maintenant directement sur la mission depuis son panneau. L'assurance en est un
+comme les autres, et `resolveMission` vérifie dans le ledger si l'équipe en a
+dépensé une avant de rembourser la moitié de la mise.
+
+`SUPPLY RUN` est la mission de dépannage : gratuite, 200 CIT$, 0 énergie,
+affichée en tête de liste avec son propre bandeau.
+
+### Endgame
+
+Six fragments, six codes remis par les admins. Chacun rend des CIT$, de
+l'énergie et **un morceau de l'histoire** — le texte n'est jamais envoyé au
+navigateur avant validation du code. La progression (`17 %`, `1 / 6`) s'affiche
+sur l'onglet Endgame et dans le panneau d'équipe.
+
+### Notifications
+
+L'onglet **Alerts** de l'admin envoie deux types de messages à une ou plusieurs
+équipes :
+
+- **NORMAL** — arrive dans le panneau Transmissions (icône cloche du header) et
+  sur la page d'accueil. C'est de l'information, pas le fil d'activité public.
+- **URGENT** — prend tout l'écran de l'équipe en rouge, avec un compte à
+  rebours. La modale **ignore Échap et les clics extérieurs** : seul le bouton
+  d'accusé de réception la ferme, pour qu'aucune équipe ne puisse la rater.
+
+Pour un urgent, l'admin choisit le délai, la récompense (200 CIT$ par défaut) et
+la pénalité en CIT$ et en énergie. S'il valide avant la fin, l'équipe touche la
+récompense ; si le chrono expire, un balayage serveur toutes les 15 secondes
+applique la pénalité, **même si l'équipe a fermé l'onglet**. Accuser réception
+ne suffit donc pas à s'en tirer.
 
 `legacy-vanilla/` conserve la version HTML/CSS/JS d'origine à titre de référence.

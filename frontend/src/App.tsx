@@ -8,6 +8,7 @@ import { Login } from '@/pages/Login'
 import { Home } from '@/pages/Home'
 import { Challenges } from '@/pages/Challenges'
 import { Missions } from '@/pages/Missions'
+import { Endgame } from '@/pages/Endgame'
 import { Market } from '@/pages/Market'
 import { Story } from '@/pages/Story'
 
@@ -24,6 +25,8 @@ const TeamDetail = lazy(() => import('@/pages/admin/TeamDetail').then((m) => ({ 
 const Items = lazy(() => import('@/pages/admin/Items').then((m) => ({ default: m.Items })))
 const Inventory = lazy(() => import('@/pages/admin/Inventory').then((m) => ({ default: m.Inventory })))
 const AdminMissions = lazy(() => import('@/pages/admin/Missions').then((m) => ({ default: m.AdminMissions })))
+const AdminEndgame = lazy(() => import('@/pages/admin/Endgame').then((m) => ({ default: m.AdminEndgame })))
+const Alerts = lazy(() => import('@/pages/admin/Alerts').then((m) => ({ default: m.Alerts })))
 const Ledger = lazy(() => import('@/pages/admin/Ledger').then((m) => ({ default: m.Ledger })))
 
 export function App() {
@@ -56,6 +59,7 @@ export function App() {
             <Route index element={<Home />} />
             <Route path="challenges" element={<Challenges />} />
             <Route path="missions" element={<Missions />} />
+            <Route path="endgame" element={<Endgame />} />
             <Route path="market" element={<Market />} />
             <Route path="story" element={<Story />} />
           </>
@@ -78,6 +82,8 @@ export function App() {
         <Route path="items" element={<Items />} />
         <Route path="inventory" element={<Inventory />} />
         <Route path="missions" element={<AdminMissions />} />
+        <Route path="endgame" element={<AdminEndgame />} />
+        <Route path="alerts" element={<Alerts />} />
         <Route path="ledger" element={<Ledger />} />
       </Route>
 

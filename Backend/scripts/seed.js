@@ -22,20 +22,30 @@ function joinCode() {
         .join('');
 }
 
+/**
+ * [code, category, difficulty, reward, energy, title, description, flag]
+ *
+ * Core Energy and the first-blood bonus both scale with difficulty: the
+ * prime is worth roughly half the reward again, so being first on a hard
+ * challenge is genuinely worth racing for.
+ */
 const CHALLENGES = [
-    ['CP-01',  'CP',   1,  50,  'Base Case',           'Return the nth term of the recovery sequence.',        'CIT{r3curs10n_r3st0r3d}'],
-    ['CP-02',  'CP',   2,  90,  'Corrupted Sort',      'Reorder the fragmented index without losing entries.', 'CIT{st4bl3_s0rt}'],
-    ['CP-03',  'CP',   3, 150,  'Shortest Path Home',  'Find the cheapest route across the dead nodes.',       'CIT{d1jkstr4_l1v3s}'],
-    ['CP-04',  'CP',   4, 220,  'Memory Leak',         'Reconstruct the allocation table from the dump.',      'CIT{h34p_r3p41r3d}'],
-    ['CTF-01', 'CTF',  1,  60,  'Plaintext Ghost',     'Something was left in the response headers.',          'CIT{h34d3rs_t3ll_4ll}'],
-    ['CTF-02', 'CTF',  2, 110,  'Rotten Cookie',       'The session cookie is not what it claims to be.',      'CIT{b4s364_1s_n0t_3ncrypt10n}'],
-    ['CTF-03', 'CTF',  3, 180,  'Injected Archive',    'The archive query trusts you too much.',               'CIT{un10n_s3l3ct_tru7h}'],
-    ['CTF-04', 'CTF',  5, 350,  'Core Dump',           'The final fragment hides inside the binary.',          'CIT{th3_c0r3_w4s_n3v3r_l0st}'],
-    ['DATA-01','DATA', 1,  55,  'Signal Noise',        'How many transmissions were lost between 09:00-09:05?','CIT{f1v3_m1nut3s}'],
-    ['DATA-02','DATA', 2, 100,  'Anomaly Pattern',     'Identify the sector that failed first.',               'CIT{s3ct0r_7}'],
-    ['DATA-03','DATA', 3, 160,  'Ghost Operator',      'One account acted after the shutdown. Which one?',     'CIT{0p3r4t0r_z3r0}'],
-    ['DATA-04','DATA', 4, 240,  'Crash Authorization', 'Who signed the shutdown order?',                       'CIT{4uth0r1z3d_by_th3_c0r3}'],
+    ['CP-01',  'CP',   1,  50,  6,  'Base Case',           'Return the nth term of the recovery sequence.',        'CIT{r3curs10n_r3st0r3d}'],
+    ['CP-02',  'CP',   2,  90,  10, 'Corrupted Sort',      'Reorder the fragmented index without losing entries.', 'CIT{st4bl3_s0rt}'],
+    ['CP-03',  'CP',   3, 150,  16, 'Shortest Path Home',  'Find the cheapest route across the dead nodes.',       'CIT{d1jkstr4_l1v3s}'],
+    ['CP-04',  'CP',   4, 220,  24, 'Memory Leak',         'Reconstruct the allocation table from the dump.',      'CIT{h34p_r3p41r3d}'],
+    ['CTF-01', 'CTF',  1,  60,  7,  'Plaintext Ghost',     'Something was left in the response headers.',          'CIT{h34d3rs_t3ll_4ll}'],
+    ['CTF-02', 'CTF',  2, 110,  12, 'Rotten Cookie',       'The session cookie is not what it claims to be.',      'CIT{b4s364_1s_n0t_3ncrypt10n}'],
+    ['CTF-03', 'CTF',  3, 180,  19, 'Injected Archive',    'The archive query trusts you too much.',               'CIT{un10n_s3l3ct_tru7h}'],
+    ['CTF-04', 'CTF',  5, 350,  38, 'Core Dump',           'The final fragment hides inside the binary.',          'CIT{th3_c0r3_w4s_n3v3r_l0st}'],
+    ['DATA-01','DATA', 1,  55,  6,  'Signal Noise',        'How many transmissions were lost between 09:00-09:05?','CIT{f1v3_m1nut3s}'],
+    ['DATA-02','DATA', 2, 100,  11, 'Anomaly Pattern',     'Identify the sector that failed first.',               'CIT{s3ct0r_7}'],
+    ['DATA-03','DATA', 3, 160,  17, 'Ghost Operator',      'One account acted after the shutdown. Which one?',     'CIT{0p3r4t0r_z3r0}'],
+    ['DATA-04','DATA', 4, 240,  26, 'Crash Authorization', 'Who signed the shutdown order?',                       'CIT{4uth0r1z3d_by_th3_c0r3}'],
 ];
+
+const firstBloodCit = (reward) => Math.round(reward * 0.5);
+const firstBloodEnergy = (energy) => Math.max(3, Math.round(energy * 0.5));
 
 async function main() {
     console.log('\n=== CIT: 404 - SEEDING THE NETWORK ===\n');
@@ -83,20 +93,47 @@ async function main() {
     console.log('  (shown once - print and hand out)\n');
 
     // --- Challenges --------------------------------------------------
-    for (const [code, category, difficulty, reward, title, description, flag] of CHALLENGES) {
+    for (const [code, category, difficulty, reward, energy, title, description, flag] of CHALLENGES) {
         await db.query(
-            `INSERT INTO challenges (code, category, difficulty, reward, title, description, flag_hash)
-             VALUES ($1,$2,$3,$4,$5,$6,$7)
+            `INSERT INTO challenges (code, category, difficulty, reward, core_energy,
+                                     first_blood_cit, first_blood_energy,
+                                     title, description, flag_hash)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
              ON CONFLICT (code) DO UPDATE SET
                  category = EXCLUDED.category, difficulty = EXCLUDED.difficulty,
-                 reward = EXCLUDED.reward, title = EXCLUDED.title,
-                 description = EXCLUDED.description, flag_hash = EXCLUDED.flag_hash`,
-            [code, category, difficulty, reward, title, description, await bcrypt.hash(flag, 10)]
+                 reward = EXCLUDED.reward, core_energy = EXCLUDED.core_energy,
+                 first_blood_cit = EXCLUDED.first_blood_cit,
+                 first_blood_energy = EXCLUDED.first_blood_energy,
+                 title = EXCLUDED.title, description = EXCLUDED.description,
+                 flag_hash = EXCLUDED.flag_hash`,
+            [code, category, difficulty, reward, energy,
+             firstBloodCit(reward), firstBloodEnergy(energy),
+             title, description, await bcrypt.hash(flag, 10)]
         );
     }
     console.log(`CHALLENGES : ${CHALLENGES.length} loaded (flags hashed)\n`);
-    console.log('Flags for the answer key:');
-    CHALLENGES.forEach(([code, , , , , , flag]) => console.log(`  ${code.padEnd(8)} : ${flag}`));
+    console.log('Answer key (flag | reward | energy | first-blood bonus):');
+    CHALLENGES.forEach(([code, , , reward, energy, , , flag]) =>
+        console.log(
+            `  ${code.padEnd(8)} : ${flag.padEnd(32)} ${String(reward).padStart(4)} CIT$` +
+            ` | ${String(energy).padStart(3)} NRG | +${firstBloodCit(reward)}/+${firstBloodEnergy(energy)}`
+        )
+    );
+
+    // --- Field codes -------------------------------------------------
+    const { rows: missionCodes } = await db.query(
+        'SELECT mission_name, access_code, location_hint FROM missions ORDER BY position, id'
+    );
+    console.log('\nMISSION ACCESS CODES (admins only - read out on site):');
+    missionCodes.forEach((m) =>
+        console.log(`  ${m.mission_name.padEnd(16)} : ${m.access_code}`)
+    );
+
+    const { rows: endgameCodes } = await db.query(
+        'SELECT position, title, access_code FROM endgame_parts ORDER BY position'
+    );
+    console.log('\nENDGAME CODES (admins only):');
+    endgameCodes.forEach((p) => console.log(`  ${String(p.position).padStart(2)}. ${p.title.padEnd(28)} : ${p.access_code}`));
 
     console.log('\n=== RECOVERY PROTOCOL READY ===\n');
     await db.pool.end();

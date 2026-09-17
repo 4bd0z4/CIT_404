@@ -1,10 +1,13 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BarChart3, Boxes, LogOut, Package, Radio, ScrollText, Users } from 'lucide-react'
+import {
+  BarChart3, Bell, Boxes, Flag, LogOut, Package, Radio, ScrollText, Users,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/store/auth-context'
-import { apiGet, apiPost } from '@/lib/api'
-import { cn } from '@/lib/utils'
+import { apiGet, apiPost, ApiError } from '@/lib/api'
+import { useTimeLeft } from '@/hooks/useNow'
+import { cn, formatDuration } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { AdminOverview, Phase } from '@/types'
@@ -12,13 +15,21 @@ import type { AdminOverview, Phase } from '@/types'
 const NAV = [
   { to: '/admin', label: 'Dashboard', icon: BarChart3, end: true },
   { to: '/admin/teams', label: 'Teams', icon: Users },
+  { to: '/admin/missions', label: 'Missions', icon: Radio },
+  { to: '/admin/endgame', label: 'Endgame', icon: Flag },
+  { to: '/admin/alerts', label: 'Alerts', icon: Bell },
   { to: '/admin/items', label: 'Items', icon: Package },
   { to: '/admin/inventory', label: 'Inventory', icon: Boxes },
-  { to: '/admin/missions', label: 'Missions', icon: Radio },
   { to: '/admin/ledger', label: 'Ledger', icon: ScrollText },
 ]
 
-const PHASES: Phase[] = ['LOBBY', 'PHASE_I', 'PHASE_II', 'ENDGAME', 'CLOSED']
+const PHASES: { value: Phase; short: string }[] = [
+  { value: 'LOBBY', short: 'LOBBY' },
+  { value: 'CHALLENGES', short: 'CHALL' },
+  { value: 'MISSIONS', short: 'MISS' },
+  { value: 'ENDGAME', short: 'END' },
+  { value: 'CLOSED', short: 'CLOSED' },
+]
 
 export function AdminLayout() {
   const { admin, logout } = useAuth()
@@ -30,20 +41,27 @@ export function AdminLayout() {
     refetchInterval: 10_000,
   })
 
+  const timeLeft = useTimeLeft(data?.phase.phase_ends_at)
+
   const setPhase = useMutation({
-    mutationFn: (phase: Phase) => apiPost('/admin/phase', { phase }),
-    onSuccess: (_res, phase) => {
-      toast('PROTOCOL PHASE UPDATED', { description: phase })
+    mutationFn: (target: Phase) => apiPost('/admin/phase', { phase: target }),
+    onSuccess: (_res, target) => {
+      toast('PROTOCOL PHASE UPDATED', { description: target })
       queryClient.invalidateQueries({ queryKey: ['admin-overview'] })
     },
+    onError: (err) =>
+      toast('PHASE CHANGE FAILED', {
+        description: err instanceof ApiError ? err.message : 'REQUEST FAILED.',
+      }),
   })
 
   const current = data?.phase.phase
+  const openUrgent = data?.totals.open_urgent ?? 0
 
   return (
     <div className="relative z-10 flex min-h-dvh flex-col">
       <header className="sticky top-0 z-40 border-b border-warn/30 bg-black/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-2.5">
           <div className="mr-auto">
             <div className="font-display text-sm tracking-[0.2em] text-warn">CORE SUPERVISION</div>
             <div className="text-[10px] tracking-[0.14em] text-term/40 uppercase">
@@ -51,24 +69,35 @@ export function AdminLayout() {
             </div>
           </div>
 
-          {/* Phase control drives what every operator terminal can do. */}
+          {/* Switching phase is the single most consequential control here:
+              it locks every other tab for every team at once. */}
           <div className="flex flex-wrap items-center gap-1">
             <span className="mr-1 text-[10px] tracking-[0.14em] text-term/35 uppercase">Phase</span>
             {PHASES.map((p) => (
               <button
-                key={p}
-                onClick={() => setPhase.mutate(p)}
+                key={p.value}
+                onClick={() => setPhase.mutate(p.value)}
                 disabled={setPhase.isPending}
                 className={cn(
                   'border px-2 py-1 text-[10px] font-bold tracking-[0.08em] transition-colors',
-                  current === p
+                  current === p.value
                     ? 'border-warn bg-warn text-void'
                     : 'border-edge text-term/50 hover:border-warn/60 hover:text-warn'
                 )}
               >
-                {p.replace('PHASE_', 'P')}
+                {p.short}
               </button>
             ))}
+            {timeLeft !== null && (
+              <span
+                className={cn(
+                  'ml-2 font-display text-sm tabular-nums',
+                  timeLeft < 5 * 60_000 ? 'animate-blink text-alert' : 'text-warn'
+                )}
+              >
+                {formatDuration(timeLeft)}
+              </span>
+            )}
           </div>
 
           <Button variant="ghost" size="sm" onClick={logout}>
@@ -84,7 +113,7 @@ export function AdminLayout() {
               end={end}
               className={({ isActive }) =>
                 cn(
-                  'flex shrink-0 items-center gap-1.5 border-r border-edge px-4 py-2.5 text-[11px] font-bold tracking-[0.12em] uppercase transition-colors',
+                  'flex shrink-0 items-center gap-1.5 border-r border-edge px-3.5 py-2.5 text-[11px] font-bold tracking-[0.1em] uppercase transition-colors',
                   isActive
                     ? 'bg-warn/10 text-warn shadow-[inset_0_-2px_0_0_var(--color-warn)]'
                     : 'text-term/45 hover:bg-term/5 hover:text-term/80'
@@ -93,6 +122,9 @@ export function AdminLayout() {
             >
               <Icon className="size-3.5" />
               {label}
+              {to === '/admin/alerts' && openUrgent > 0 && (
+                <span className="ml-1 border border-alert px-1 text-[9px] text-alert">{openUrgent}</span>
+              )}
             </NavLink>
           ))}
           {data && (

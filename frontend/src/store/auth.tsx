@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { api, setAccessToken, setUnauthorizedHandler } from '@/lib/api'
+import { api, refreshSession, setAccessToken, setUnauthorizedHandler } from '@/lib/api'
 import { disconnectSocket } from '@/lib/socket'
 import { AuthContext, type AuthContextValue } from './auth-context'
 import type { Subject } from '@/types'
@@ -32,9 +32,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   useEffect(() => {
     let cancelled = false
-    api<AuthResponse>('/auth/refresh', { method: 'POST' })
-      .then((data) => { if (!cancelled) applySession(data) })
-      .catch(() => { if (!cancelled) clearSession() })
+    // Goes through the shared single-flight helper: the refresh token is
+    // rotated server-side, so two parallel calls would spend the cookie
+    // twice and log the operators straight back out.
+    refreshSession()
+      .then((data) => {
+        if (cancelled) return
+        if (data) applySession(data as AuthResponse)
+        else clearSession()
+      })
       .finally(() => { if (!cancelled) setBooting(false) })
     return () => { cancelled = true }
   }, [applySession, clearSession])

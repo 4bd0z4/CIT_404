@@ -1,11 +1,16 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { apiGet } from '@/lib/api'
+import { apiGet, apiPost } from '@/lib/api'
 import { connectSocket, disconnectSocket } from '@/lib/socket'
 import { formatCIT } from '@/lib/utils'
 import { GameContext, type GameContextValue } from './game-context'
-import type { GameState, InventoryEntry, Wallet } from '@/types'
+import type {
+  EndgameProgress, InventoryEntry, Notification, Phase, Wallet,
+} from '@/types'
+import type { GameState } from '@/types'
+
+const EMPTY_ENDGAME: EndgameProgress = { solved: 0, total: 0 }
 
 /**
  * Three operators share one wallet, so the balance shown on each phone has
@@ -25,11 +30,23 @@ export function GameProvider({ children }: { children: ReactNode }) {
     refetchOnWindowFocus: true,
   })
 
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => apiGet<Notification[]>('/game/notifications'),
+    refetchInterval: 30_000,
+  })
+
   useEffect(() => {
     if (!data) return
     setWallet({ balance: data.team.cit_balance, coreEnergy: data.team.core_energy })
     setInventory(data.inventory)
   }, [data])
+
+  const invalidateAll = useCallback(() => {
+    for (const key of ['game-state', 'challenges', 'missions', 'endgame', 'items', 'notifications']) {
+      queryClient.invalidateQueries({ queryKey: [key] })
+    }
+  }, [queryClient])
 
   useEffect(() => {
     const socket = connectSocket()
@@ -38,14 +55,35 @@ export function GameProvider({ children }: { children: ReactNode }) {
     socket.on('inventory_update', ({ inventory: inv }: { inventory: InventoryEntry[] }) => setInventory(inv))
 
     socket.on('phase_change', () => {
-      queryClient.invalidateQueries({ queryKey: ['game-state'] })
-      queryClient.invalidateQueries({ queryKey: ['missions'] })
+      invalidateAll()
       toast('SYSTEM MESSAGE', { description: 'THE CORE HAS CHANGED THE PROTOCOL PHASE.' })
     })
 
-    socket.on('mission_resolved', ({ outcome, missionName }: { outcome: string; missionName: string }) => {
+    socket.on('mission_unlocked', () => {
       queryClient.invalidateQueries({ queryKey: ['missions'] })
+    })
+
+    socket.on('mission_resolved', ({ outcome, missionName }: { outcome: string; missionName: string }) => {
+      invalidateAll()
       toast(outcome === 'COMPLETED' ? 'MISSION COMPLETE' : 'MISSION FAILED', { description: missionName })
+    })
+
+    // Urgent messages drive a blocking modal, so the list has to refresh
+    // the instant one lands rather than on the next poll.
+    socket.on('notification', (notif: Notification) => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      if (notif.kind === 'NORMAL') {
+        toast('MESSAGE FROM THE CORE', { description: notif.title })
+      }
+    })
+
+    socket.on('notification_resolved', ({ outcome, title }: { outcome: string; title: string }) => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      queryClient.invalidateQueries({ queryKey: ['game-state'] })
+      toast(
+        outcome === 'COMPLETED' ? 'ORDER COMPLETE' : outcome === 'EXPIRED' ? 'ORDER EXPIRED' : 'ORDER FAILED',
+        { description: title }
+      )
     })
 
     socket.on('team_locked', ({ locked }: { locked: boolean }) => {
@@ -62,34 +100,84 @@ export function GameProvider({ children }: { children: ReactNode }) {
     )
 
     return () => {
-      socket.off('wallet_update')
-      socket.off('inventory_update')
-      socket.off('phase_change')
-      socket.off('mission_resolved')
-      socket.off('team_locked')
-      socket.off('operator_online')
-      socket.off('operator_offline')
+      socket.removeAllListeners()
       disconnectSocket()
     }
-  }, [queryClient])
+  }, [queryClient, invalidateAll])
 
-  // A teammate spending money is worth a heads-up, not a silent number change.
-  const [lastBalance, setLastBalance] = useState<number | null>(null)
+  /**
+   * A teammate spending money is worth a heads-up, not a silent number
+   * change. The ref starts unset so the jump from the placeholder zero to
+   * the first real balance is not announced as a credit on every page load.
+   */
+  const lastBalance = useRef<number | null>(null)
   useEffect(() => {
-    if (lastBalance !== null && wallet.balance !== lastBalance) {
-      const delta = wallet.balance - lastBalance
-      toast(delta > 0 ? 'CREDIT RECEIVED' : 'DEBIT REGISTERED', {
-        description: `${delta > 0 ? '+' : ''}${delta} CIT$ — balance ${formatCIT(wallet.balance)}`,
-      })
-    }
-    setLastBalance(wallet.balance)
-    // lastBalance is the previous-value ref; including it would loop.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wallet.balance])
+    if (!data) return
+    const previous = lastBalance.current
+    lastBalance.current = wallet.balance
+    if (previous === null || previous === wallet.balance) return
+
+    const delta = wallet.balance - previous
+    toast(delta > 0 ? 'CREDIT RECEIVED' : 'DEBIT REGISTERED', {
+      description: `${delta > 0 ? '+' : ''}${delta} CIT$ — balance ${formatCIT(wallet.balance)}`,
+    })
+  }, [wallet.balance, data])
+
+  const acknowledge = useCallback(
+    (id: number) => {
+      apiPost(`/game/notifications/${id}/ack`)
+        .catch(() => undefined)
+        .finally(() => queryClient.invalidateQueries({ queryKey: ['notifications'] }))
+    },
+    [queryClient]
+  )
+
+  const markRead = useCallback(
+    (id: number) => {
+      apiPost(`/game/notifications/${id}/read`)
+        .catch(() => undefined)
+        .finally(() => queryClient.invalidateQueries({ queryKey: ['notifications'] }))
+    },
+    [queryClient]
+  )
+
+  const phase = data?.phase
+  const isPhaseOpen = useCallback((p: Phase) => phase?.phase === p, [phase])
+
+  const urgentQueue = useMemo(
+    () =>
+      notifications
+        .filter((n) => n.kind === 'URGENT' && n.status === 'SENT' && !n.acknowledged_at)
+        .sort((a, b) => a.created_at.localeCompare(b.created_at)),
+    [notifications]
+  )
+
+  const unreadCount = useMemo(
+    () =>
+      notifications.filter((n) => (n.kind === 'URGENT' ? n.status === 'SENT' : !n.read_at)).length,
+    [notifications]
+  )
 
   const value = useMemo<GameContextValue>(
-    () => ({ state: data, wallet, inventory, loading: isLoading, onlineOperators }),
-    [data, wallet, inventory, isLoading, onlineOperators]
+    () => ({
+      state: data,
+      wallet,
+      inventory,
+      endgame: data?.endgame ?? EMPTY_ENDGAME,
+      phase,
+      isPhaseOpen,
+      notifications,
+      unreadCount,
+      urgentQueue,
+      acknowledge,
+      markRead,
+      loading: isLoading,
+      onlineOperators,
+    }),
+    [
+      data, wallet, inventory, phase, isPhaseOpen, notifications,
+      unreadCount, urgentQueue, acknowledge, markRead, isLoading, onlineOperators,
+    ]
   )
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>

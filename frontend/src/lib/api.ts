@@ -27,22 +27,34 @@ export class ApiError extends Error {
   }
 }
 
-let refreshInFlight: Promise<boolean> | null = null
+export interface SessionPayload {
+  accessToken: string
+  subject: unknown
+}
 
-/** Silently swaps the refresh cookie for a fresh access token. */
-async function refresh(): Promise<boolean> {
+let refreshInFlight: Promise<SessionPayload | null> | null = null
+
+/**
+ * Swaps the refresh cookie for a fresh access token.
+ *
+ * Single-flight, and every caller must come through here. The server
+ * rotates the refresh token on each use, so two parallel calls would see
+ * the second one present an already-spent cookie and get logged out —
+ * which is exactly what React StrictMode's double-mount used to cause.
+ */
+export async function refreshSession(): Promise<SessionPayload | null> {
   if (!refreshInFlight) {
     refreshInFlight = fetch('/api/auth/refresh', {
       method: 'POST',
       credentials: 'include',
     })
       .then(async (res) => {
-        if (!res.ok) return false
-        const data = await res.json()
+        if (!res.ok) return null
+        const data: SessionPayload = await res.json()
         accessToken = data.accessToken
-        return true
+        return data
       })
-      .catch(() => false)
+      .catch(() => null)
       .finally(() => {
         refreshInFlight = null
       })
@@ -77,7 +89,7 @@ export async function api<T = unknown>(path: string, options: RequestOptions = {
   // The refresh call itself is exempt: retrying it on 401 would just ask
   // the same dead cookie a second time.
   if (res.status === 401 && !_retried && !path.endsWith(REFRESH_PATH)) {
-    if (await refresh()) {
+    if (await refreshSession()) {
       return api<T>(path, { ...options, _retried: true })
     }
     accessToken = null

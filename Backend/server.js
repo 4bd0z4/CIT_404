@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const rt = require('./lib/realtime');
+const economy = require('./lib/economy');
 const { attachAuth, socketAuth } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/game');
@@ -91,6 +92,29 @@ app.use((err, _req, res, _next) => {
 
     res.status(err.status || (dbDown ? 503 : 500)).json({ error: 'SYSTEM FAILURE DETECTED.', message });
 });
+
+/**
+ * An urgent order has to bite even when nobody is looking: a team that
+ * simply closed the tab still takes the penalty when the countdown runs
+ * out. The sweep is idempotent — resolveNotification only ever moves a
+ * row out of SENT once — so an admin validating at the same moment wins
+ * the race without double-charging anyone.
+ */
+const EXPIRY_SWEEP_MS = 15_000;
+setInterval(() => {
+    economy.expireOverdueNotifications()
+        .then((expired) => {
+            for (const row of expired) {
+                rt.broadcastWallet(row.teamId, row.wallet);
+                rt.broadcastNotificationResolved(row.teamId, {
+                    notificationId: row.notification.id,
+                    outcome: 'EXPIRED',
+                    title: row.notification.title,
+                });
+            }
+        })
+        .catch((err) => console.error('URGENT SWEEP FAILED:', err.message));
+}, EXPIRY_SWEEP_MS).unref();
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

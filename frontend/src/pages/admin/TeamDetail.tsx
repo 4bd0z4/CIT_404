@@ -31,6 +31,7 @@ export function TeamDetail() {
   })
 
   const [adjustAmount, setAdjustAmount] = useState('')
+  const [adjustEnergy, setAdjustEnergy] = useState('')
   const [adjustNote, setAdjustNote] = useState('')
   const [grantCode, setGrantCode] = useState('')
 
@@ -45,12 +46,16 @@ export function TeamDetail() {
   const adjust = useMutation({
     mutationFn: () =>
       apiPost(`/admin/teams/${teamId}/adjust`, {
-        amount: Number(adjustAmount),
+        amount: Number(adjustAmount) || 0,
+        energy: Number(adjustEnergy) || 0,
         note: adjustNote || 'Manual adjustment',
       }),
     onSuccess: () => {
-      toast('BALANCE ADJUSTED', { description: `${adjustAmount} CIT$ · logged to the ledger` })
+      toast('BALANCE ADJUSTED', {
+        description: `${adjustAmount || 0} CIT$ · ${adjustEnergy || 0} NRG · logged to the ledger`,
+      })
       setAdjustAmount('')
+      setAdjustEnergy('')
       setAdjustNote('')
       invalidate()
     },
@@ -226,14 +231,23 @@ export function TeamDetail() {
             )}
 
             <div className="space-y-2 border-t border-edge pt-3">
-              <Label>Manual CIT$ adjustment</Label>
+              <Label>Manual adjustment</Label>
               <div className="flex gap-2">
                 <Input
                   type="number"
                   value={adjustAmount}
                   onChange={(e) => setAdjustAmount(e.target.value)}
-                  placeholder="+100 / -50"
-                  className="h-9 w-28 text-xs"
+                  placeholder="± CIT$"
+                  className="h-9 w-24 text-xs"
+                  aria-label="CIT$ adjustment"
+                />
+                <Input
+                  type="number"
+                  value={adjustEnergy}
+                  onChange={(e) => setAdjustEnergy(e.target.value)}
+                  placeholder="± NRG"
+                  className="h-9 w-24 text-xs"
+                  aria-label="Energy adjustment"
                 />
                 <Input
                   value={adjustNote}
@@ -244,7 +258,7 @@ export function TeamDetail() {
                 <Button
                   variant="warn"
                   size="sm"
-                  disabled={!adjustAmount || adjust.isPending}
+                  disabled={(!adjustAmount && !adjustEnergy) || adjust.isPending}
                   onClick={() => adjust.mutate()}
                 >
                   Apply
@@ -274,7 +288,7 @@ export function TeamDetail() {
                     <Th>Status</Th>
                     <Th className="text-right">Paid</Th>
                     <Th className="text-right">Reward</Th>
-                    <Th>Insurance</Th>
+                    <Th>Difficulty</Th>
                     <Th className="text-right">Purchased</Th>
                   </tr>
                 </Thead>
@@ -293,7 +307,16 @@ export function TeamDetail() {
                       </Td>
                       <Td className="text-right tabular-nums text-alert/70">{m.paid_amount}</Td>
                       <Td className="text-right tabular-nums text-term">{m.reward}</Td>
-                      <Td>{m.has_insurance ? <Badge variant="info">Insured</Badge> : '--'}</Td>
+                      <Td>
+                        <Badge
+                          variant={
+                            m.difficulty === 'HARD' ? 'alert'
+                              : m.difficulty === 'MEDIUM' ? 'warn' : 'default'
+                          }
+                        >
+                          {m.difficulty}
+                        </Badge>
+                      </Td>
                       <Td className="text-right text-term/30">{timeAgo(m.purchased_at)}</Td>
                     </Tr>
                   ))}

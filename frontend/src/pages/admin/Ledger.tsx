@@ -10,8 +10,9 @@ import { KIND_LABEL } from '@/components/TransactionLog'
 import type { LedgerKind, LedgerRow } from '@/types'
 
 const KINDS: (LedgerKind | 'ALL')[] = [
-  'ALL', 'CHALLENGE_REWARD', 'ITEM_PURCHASE', 'ITEM_USE',
-  'MISSION_PURCHASE', 'MISSION_REWARD', 'INSURANCE_REFUND', 'ADMIN_ADJUST',
+  'ALL', 'CHALLENGE_REWARD', 'FIRST_BLOOD', 'ITEM_PURCHASE', 'ITEM_USE',
+  'MISSION_PURCHASE', 'MISSION_REWARD', 'ENDGAME_REWARD',
+  'NOTIF_REWARD', 'NOTIF_PENALTY', 'ADMIN_ADJUST',
 ]
 
 /**

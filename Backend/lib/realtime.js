@@ -23,9 +23,13 @@ function toFeed(event, payload) {
     if (io) io.to('feed').emit(event, payload);
 }
 
+function broadcastAll(event, payload) {
+    if (io) io.emit(event, payload);
+}
+
 /**
  * A wallet change concerns all three parties at once: the operators who
- * need the new balance, the admin dashboard, and the public feed.
+ * need the new balance, and the admin dashboard.
  */
 function broadcastWallet(teamId, { balance, coreEnergy }) {
     toTeam(teamId, 'wallet_update', { balance, coreEnergy });
@@ -42,4 +46,27 @@ function broadcastActivity(entry) {
     toAdmins('activity', entry);
 }
 
-module.exports = { bind, toTeam, toAdmins, toFeed, broadcastWallet, broadcastInventory, broadcastActivity };
+/** A phase switch changes what every connected operator may do. */
+function broadcastPhase(state) {
+    broadcastAll('phase_change', state);
+}
+
+/**
+ * Admin message to one team. Urgent ones drive a blocking modal, so they
+ * go out on their own event rather than riding the generic feed.
+ */
+function broadcastNotification(teamId, notification) {
+    toTeam(teamId, 'notification', notification);
+    toAdmins('notification_sent', { teamId, notification });
+}
+
+function broadcastNotificationResolved(teamId, payload) {
+    toTeam(teamId, 'notification_resolved', payload);
+    toAdmins('notification_resolved', { teamId, ...payload });
+}
+
+module.exports = {
+    bind, toTeam, toAdmins, toFeed, broadcastAll,
+    broadcastWallet, broadcastInventory, broadcastActivity,
+    broadcastPhase, broadcastNotification, broadcastNotificationResolved,
+};

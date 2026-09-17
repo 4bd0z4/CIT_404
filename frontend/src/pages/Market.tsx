@@ -100,6 +100,9 @@ function MarketCard({ item, balance }: { item: MarketItem; balance: number }) {
   const affordable = balance >= item.cost
   const atLimit = item.max_per_team !== null && item.total_bought >= item.max_per_team
   const soldOut = item.stock !== null && item.stock <= 0
+  // A mission item has to name the mission it applies to, so it can only be
+  // spent from that mission's panel — never from here or the inventory.
+  const missionOnly = item.applies_to === 'MISSION'
 
   return (
     <div
@@ -132,8 +135,9 @@ function MarketCard({ item, balance }: { item: MarketItem; balance: number }) {
             {item.total_bought}/{item.max_per_team} max
           </span>
         )}
+        {missionOnly && <span className="text-[10px] text-term/30">use from a mission</span>}
         <div className="ml-auto flex gap-1.5">
-          {item.owned > 0 && (
+          {item.owned > 0 && !missionOnly && (
             <Button variant="item" size="sm" onClick={() => use.mutate()} disabled={use.isPending}>
               <Sparkles /> Use
             </Button>
