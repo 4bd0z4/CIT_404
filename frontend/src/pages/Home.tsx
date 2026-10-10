@@ -116,40 +116,53 @@ export function Home() {
             <CardTitle>Recovery Standings</CardTitle>
             <Crown className="size-4 text-warn" />
           </CardHeader>
-          <CardContent className="space-y-1 p-3">
+          <CardContent className="space-y-1.5 p-3">
             {!board?.length ? (
               <EmptyState>STANDINGS NOT YET CALCULATED.</EmptyState>
-            ) : (
-              board.slice(0, 8).map((row) => {
-                const isMine = row.team_name === team?.teamName
-                return (
-                  <div
-                    key={row.team_name}
-                    className={`flex items-center gap-3 border px-3 py-2 text-[11px] ${
-                      isMine ? 'border-term/50 bg-term/10' : 'border-transparent'
-                    }`}
-                  >
-                    <span className="w-6 font-display text-sm tabular-nums text-term/50">
-                      {row.rank}
-                    </span>
-                    <span className="flex-1 truncate font-bold">{row.team_name}</span>
-                    {row.first_bloods > 0 && (
-                      <span className="flex items-center gap-0.5 text-warn" title="First bloods">
-                        <Crown className="size-3" />
-                        {row.first_bloods}
+            ) : (() => {
+                const top = board.slice(0, 8)
+                const maxEnergy = Math.max(1, ...top.map((r) => r.core_energy))
+                const medal = (rank: number) =>
+                  rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : undefined
+                return top.map((row, i) => {
+                  const isMine = row.team_name === team?.teamName
+                  const variant = medal(row.rank)
+                  return (
+                    <div
+                      key={row.team_name}
+                      className="rank-row"
+                      {...(variant ? { 'data-variant': variant } : {})}
+                      {...(isMine ? { 'data-mine': '' } : {})}
+                      style={{ animationDelay: `${i * 45}ms` }}
+                    >
+                      <span className="rank-num">{row.rank}</span>
+                      <div className="rank-identity">
+                        <div className="flex items-center gap-2">
+                          <span className="rank-name">{row.team_name}</span>
+                          {row.first_bloods > 0 && (
+                            <span className="flex items-center gap-0.5 text-warn" title="First bloods">
+                              <Crown className="size-3" />
+                              {row.first_bloods}
+                            </span>
+                          )}
+                        </div>
+                        <div className="rank-bar" aria-hidden>
+                          <span style={{ width: `${(row.core_energy / maxEnergy) * 100}%` }} />
+                        </div>
+                      </div>
+                      <div className="rank-trailing">
+                        <Zap className="size-3 text-info" />
+                        <span className="rank-pts">{row.core_energy}</span>
+                        <span className="rank-pts-label">NRG</span>
+                      </div>
+                      <span className="w-14 shrink-0 text-right text-[11px] tabular-nums text-term/40">
+                        {row.total_solved} solved
                       </span>
-                    )}
-                    <span className="flex items-center gap-1 tabular-nums text-info">
-                      <Zap className="size-3" />
-                      {row.core_energy}
-                    </span>
-                    <span className="w-16 text-right tabular-nums text-term/50">
-                      {row.total_solved} solved
-                    </span>
-                  </div>
-                )
-              })
-            )}
+                    </div>
+                  )
+                })
+              })()
+            }
           </CardContent>
         </Card>
       </div>

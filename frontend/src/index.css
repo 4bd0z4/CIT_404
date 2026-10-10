@@ -161,3 +161,148 @@ body::after {
   color: var(--color-info);
   animation: glitch-shift 3.1s infinite linear alternate-reverse;
 }
+
+/* =====================================================================
+   CIT: 404 — MOTION LAYER
+   Hand-tuned animation recipes (adapted from the IBC CTF system) re-skinned
+   to the terminal-green palette. Buttons, scoreboard rows, standings and
+   cards get life without changing the existing layout. All compositor-
+   friendly (transform/opacity/box-shadow) and disabled under reduced-motion.
+   ===================================================================== */
+
+/* ---- Buttons: lift + phosphor glow + quick press ---- */
+button, a, [role="button"] { }
+
+.btn-live {
+  position: relative;
+  transition: transform 180ms cubic-bezier(0.2, 0.7, 0.2, 1),
+              box-shadow 180ms ease-out, filter 180ms ease-out;
+}
+.btn-live:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 45%, transparent),
+              0 8px 22px -10px currentColor;
+  filter: brightness(1.08);
+}
+.btn-live:active:not(:disabled) { transform: translateY(0) scale(0.97); }
+
+/* A sweeping phosphor sheen on primary actions */
+.btn-sheen { position: relative; overflow: hidden; }
+.btn-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%,
+    rgba(0, 255, 65, 0.18) 45%, rgba(0, 255, 65, 0.0) 60%);
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+.btn-sheen:hover:not(:disabled)::after { transform: translateX(120%); }
+
+/* ---- Scoreboard / standings rank rows ---- */
+.rank-row {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  --row-base: rgba(0, 255, 65, 0.03);
+  --row-grad: transparent;
+  transition: transform 180ms ease-out, box-shadow 180ms ease-out;
+}
+.rank-row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: var(--row-base);
+  border: 1px solid var(--color-edge);
+}
+.rank-row::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: -1;
+  inline-size: 18rem;
+  max-inline-size: 68%;
+  background: linear-gradient(to right, var(--row-grad), transparent);
+}
+.rank-row:hover { transform: translateX(2px); }
+.rank-row[data-variant='gold']   { --row-base: rgba(255, 176, 0, 0.08);  --row-grad: rgba(255, 176, 0, 0.20); }
+.rank-row[data-variant='silver'] { --row-base: rgba(180, 220, 190, 0.07); --row-grad: rgba(180, 220, 190, 0.16); }
+.rank-row[data-variant='bronze'] { --row-base: rgba(0, 229, 255, 0.07);  --row-grad: rgba(0, 229, 255, 0.16); }
+.rank-row[data-mine] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-term) 55%, transparent),
+              0 0 22px -8px var(--color-term);
+}
+
+.rank-num {
+  flex: none;
+  min-width: 1.75rem;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--color-term) 50%, transparent);
+}
+.rank-row[data-variant='gold']   .rank-num { color: var(--color-warn); text-shadow: 0 0 10px color-mix(in srgb, var(--color-warn) 60%, transparent); }
+.rank-row[data-variant='silver'] .rank-num { color: #cfe6d6; }
+.rank-row[data-variant='bronze'] .rank-num { color: var(--color-info); }
+
+.rank-identity { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.rank-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-term);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rank-bar { height: 4px; background: rgba(0, 255, 65, 0.08); overflow: hidden; }
+.rank-bar > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--color-term-dim), var(--color-term) 60%, var(--color-info));
+  box-shadow: 0 0 8px -1px var(--color-term);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.rank-trailing { flex: none; display: flex; align-items: baseline; gap: 0.3rem; }
+.rank-pts { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--color-info); }
+.rank-pts-label { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: color-mix(in srgb, var(--color-term) 35%, transparent); }
+
+/* Row entrance stagger */
+@keyframes rank-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+.rank-row { animation: rank-in 0.35s ease-out both; }
+
+/* ---- Card hover lift (apply .card-live to any card) ---- */
+.card-live { transition: transform 180ms ease-out, box-shadow 180ms ease-out, border-color 180ms ease-out; }
+.card-live:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--color-term) 45%, var(--color-edge));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-term) 25%, transparent),
+              0 12px 28px -14px var(--color-term);
+}
+
+/* ---- Solved pulse (challenge/mission solved state) ---- */
+@keyframes cit-solved-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-term) 55%, transparent), 0 0 16px -4px var(--color-term); }
+  50%      { box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-term) 80%, transparent), 0 0 26px -2px var(--color-term); }
+}
+.solved-live { animation: cit-solved-pulse 2.6s ease-in-out infinite; }
+
+/* ---- Count-up / value flash when a stat changes ---- */
+@keyframes value-flash { 0% { color: var(--color-term); text-shadow: 0 0 12px var(--color-term); } 100% { } }
+.value-flash { animation: value-flash 0.6s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-live, .btn-sheen::after, .rank-row, .rank-bar > span,
+  .card-live, .solved-live, .value-flash {
+    animation: none !important;
+    transition: none !important;
+  }
+  .btn-live:hover:not(:disabled), .card-live:hover, .rank-row:hover { transform: none; }
+}

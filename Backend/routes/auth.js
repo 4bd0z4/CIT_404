@@ -41,6 +41,17 @@ function issue(res, { subject, refreshToken }) {
  * The three operators of a team share one account. Each person types their
  * own nickname (for attribution) plus the team's join code (the secret).
  */
+/**
+ * GET /api/auth/teams - public list of team names for the login dropdown.
+ * Team names are not secret (TEAM 1..N); join codes stay hashed and private.
+ */
+router.get('/teams', async (_req, res, next) => {
+    try {
+        const { rows } = await db.query('SELECT team_name FROM teams ORDER BY id');
+        res.json({ teams: rows.map((r) => r.team_name) });
+    } catch (err) { next(err); }
+});
+
 router.post('/team', loginLimiter, async (req, res, next) => {
     try {
         const { teamName, joinCode, nickname } = req.body || {};

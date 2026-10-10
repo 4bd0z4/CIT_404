@@ -1,34 +1,40 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ShieldAlert, Terminal } from 'lucide-react'
 import { useAuth } from '@/store/auth-context'
-import { ApiError } from '@/lib/api'
+import { apiGet, ApiError } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input, Label } from '@/components/ui/input'
 import { GlitchTitle, TerminalBlock, TypeWriter } from '@/components/fx'
-import { cn } from '@/lib/utils'
-
-const TEAM_COUNT = 12
 
 export function Login() {
   const { loginTeam } = useAuth()
-  const [team, setTeam] = useState<number | null>(null)
+  const [teams, setTeams] = useState<string[]>([])
+  const [teamName, setTeamName] = useState('')
   const [nickname, setNickname] = useState('')
   const [joinCode, setJoinCode] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+
+  // Team names come from the server, so the dropdown always matches the
+  // real roster (12, 17, or custom names) with no hardcoded count.
+  useEffect(() => {
+    apiGet<{ teams: string[] }>('/auth/teams')
+      .then((d) => setTeams(d.teams))
+      .catch(() => setTeams([]))
+  }, [])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
 
     if (!nickname.trim()) return setError('CALLSIGN REQUIRED.')
-    if (!team) return setError('SELECT YOUR TEAM.')
+    if (!teamName) return setError('SELECT YOUR TEAM.')
     if (!joinCode.trim()) return setError('TEAM ACCESS CODE REQUIRED.')
 
     setBusy(true)
     try {
-      await loginTeam({ teamName: `TEAM ${team}`, joinCode: joinCode.trim(), nickname: nickname.trim() })
+      await loginTeam({ teamName, joinCode: joinCode.trim(), nickname: nickname.trim() })
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'CONNECTION TO THE CORE FAILED.')
     } finally {
@@ -73,24 +79,24 @@ export function Login() {
           </div>
 
           <div className="mb-5">
-            <Label>Select team</Label>
-            <div className="grid grid-cols-4 gap-2">
-              {Array.from({ length: TEAM_COUNT }, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setTeam(n)}
-                  aria-pressed={team === n}
-                  className={cn(
-                    'border px-1 py-2.5 text-[11px] font-bold tracking-[0.08em] transition-all',
-                    team === n
-                      ? 'border-term bg-term text-void shadow-[0_0_20px_-4px_var(--color-term)]'
-                      : 'border-edge bg-black/50 text-term/60 hover:border-term/60 hover:text-term'
-                  )}
-                >
-                  {n}
-                </button>
-              ))}
+            <Label htmlFor="team">Select team</Label>
+            <div className="relative">
+              <select
+                id="team"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                className="h-10 w-full appearance-none border border-edge bg-black/60 px-3 pr-9 font-mono text-sm text-term transition-colors focus:border-term focus:shadow-[0_0_18px_-6px_var(--color-term)] focus:outline-none"
+              >
+                <option value="" disabled>
+                  {teams.length ? 'Choose your team…' : 'Loading teams…'}
+                </option>
+                {teams.map((name) => (
+                  <option key={name} value={name} className="bg-panel text-term">
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <Terminal className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-term/40" />
             </div>
           </div>
 

@@ -4,17 +4,17 @@ import type { ComponentProps } from 'react'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap font-mono text-xs font-bold uppercase tracking-[0.12em] transition-all disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer',
+  'btn-live inline-flex items-center justify-center gap-2 whitespace-nowrap font-mono text-xs font-bold uppercase tracking-[0.12em] transition-all disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer',
   {
     variants: {
       variant: {
         default:
-          'bg-term text-void border border-term hover:bg-term-dim hover:shadow-[0_0_20px_-4px_var(--color-term)]',
+          'btn-sheen bg-term text-void border border-term hover:bg-term-dim',
         outline:
           'border border-edge bg-transparent text-term hover:border-term hover:bg-term/5',
         ghost: 'border border-transparent text-term/70 hover:text-term hover:bg-term/5',
         danger:
-          'border border-alert bg-transparent text-alert hover:bg-alert/10 hover:shadow-[0_0_20px_-6px_var(--color-alert)]',
+          'border border-alert bg-transparent text-alert hover:bg-alert/10',
         warn: 'border border-warn bg-transparent text-warn hover:bg-warn/10',
         item: 'border border-item bg-transparent text-item hover:bg-item/10',
       },

@@ -63,6 +63,22 @@ interface AnswerResult {
 
 const draftKey = (id: string) => `dcr:draft:${id}`
 
+/**
+ * Minimal, safe inline markdown for mission briefings: **bold** and `code`.
+ * Splits on tokens and returns React nodes — no raw HTML, no dependency.
+ */
+function renderStory(text: string) {
+  return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="text-term">{part.slice(2, -2)}</strong>
+    }
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return <code key={i} className="text-warn">{part.slice(1, -1)}</code>
+    }
+    return <span key={i}>{part}</span>
+  })
+}
+
 export function DcrMission() {
   const { id = '' } = useParams()
   const { isPhaseOpen } = useGame()
@@ -169,7 +185,7 @@ function MissionView({ mission, onSolved }: { mission: MissionDetail; onSolved: 
             <CardTitle>Briefing</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <TerminalBlock className="whitespace-pre-wrap">{mission.story}</TerminalBlock>
+            <TerminalBlock className="whitespace-pre-wrap">{renderStory(mission.story)}</TerminalBlock>
             <div className="border border-term/30 bg-term/5 p-3 text-sm leading-relaxed text-term">
               {mission.question}
             </div>

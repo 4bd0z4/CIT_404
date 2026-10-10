@@ -101,8 +101,8 @@ function ChallengeCard({
   return (
     <div
       className={cn(
-        'border bg-black/40 p-3 transition-colors',
-        challenge.solved ? 'border-term/40 bg-term/5' : 'border-edge'
+        'card-live border bg-black/40 p-3',
+        challenge.solved ? 'solved-live border-term/40 bg-term/5' : 'border-edge'
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
