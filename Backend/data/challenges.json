@@ -157,9 +157,8 @@
       "difficulty": 2,
       "reward": 100,
       "core_energy": 20,
-      "resource_type": "EXTERNAL",
-      "resource_url": "https://cit-challenges.github.io/wayback-machine-challenge/",
-      "description": "Maybe you should go back in time to find what the page used to contain. Investigate the target site's history."
+      "resource_type": "STATIC",
+      "description": "Maybe you should go back in time to get the flag. https://cit-challeges.github.io/wayback-machine-challenge/"
     },
     {
       "code": "CTF-OS-02",
