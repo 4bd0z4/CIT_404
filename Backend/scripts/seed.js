@@ -192,7 +192,7 @@ async function main() {
         UPDATE challenges SET resource_type='DOWNLOAD', resource_url='/challs/mi04-server.log' WHERE code='CTF-MI-04';
         UPDATE challenges SET resource_type='DOWNLOAD', resource_url='/challs/st01-bizu.jpg' WHERE code='CTF-ST-01';
         UPDATE challenges SET resource_type='DOWNLOAD', resource_url='/challs/st02-signal.wav' WHERE code='CTF-ST-02';
-        UPDATE challenges SET resource_type='SERVICE', resource_url='nc altaria.proxy.rlwy.net 36043' WHERE code='CTF-MI-02';
+        UPDATE challenges SET resource_type='SERVICE', resource_url='nc iriguchi.proxy.rlwy.net 51096' WHERE code='CTF-MI-02';
         UPDATE challenges SET resource_type='EXTERNAL', resource_url='https://cit-challenges.github.io/wayback-machine-challenge/' WHERE code='CTF-OS-01';
         UPDATE challenges SET resource_type='EXTERNAL', resource_url='https://github.com/CIT-challeges/project' WHERE code='CTF-MI-01';
         UPDATE challenges SET resource_type='SERVICE', resource_url='https://citchallenge1.pythonanywhere.com/' WHERE code='CTF-WE-01';
