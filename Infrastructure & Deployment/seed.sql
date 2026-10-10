@@ -7,7 +7,12 @@
 INSERT INTO items (code, name, item_type, cost, icon, effect, payload, applies_to, is_consumable, max_per_team) VALUES
 ('HINT_L1','Hint Level 1','HINT',30,'lightbulb','Reveals a small hint for the challenge.','{}','ANY',TRUE,NULL),
 ('HINT_L2','Hint Level 2','HINT',75,'lightbulb','Reveals a more detailed hint for the challenge.','{}','ANY',TRUE,NULL),
-('INSURANCE','Mission Insurance','INSURANCE',100,'shield','On a failed mission, the team recovers 50% of the entry cost.','{"refund_ratio":0.5}','MISSION',TRUE,NULL);
+('INSURANCE','Mission Insurance','INSURANCE',100,'shield','On a failed mission, the team recovers 50% of the entry cost.','{"refund_ratio":0.5}','MISSION',TRUE,NULL),
+('ACCESS_COORD','Location Scan','ACCESS',80,'map-pin','Reveals the real-world coordinates of a mission location.','{}','MISSION',TRUE,NULL),
+('MISSION_RESIGN','Mission Resign','MISSION_TOOL',50,'flag-off','Abandon an active mission. You lose the entry cost but free the slot.','{}','MISSION',TRUE,NULL),
+('MISSION_REROLL','Mission Reroll','MISSION_TOOL',40,'refresh-cw','After completing or failing a mission, unlock it again at the same cost and reward.','{}','MISSION',TRUE,NULL),
+('TIME_BOOST','Time Boost','BOOST',60,'clock','Adds 10 extra minutes to your active mission timer.','{"extra_min":10}','MISSION',TRUE,NULL),
+('DOUBLE_REWARD','Double Reward','BOOST',120,'zap','Doubles the CIT$ and energy reward on your next mission completion.','{"multiplier":2}','MISSION',TRUE,1);
 
 INSERT INTO missions (code, mission_name, kind, position, description, location_hint, coordinates, access_code) VALUES
 ('SUPPLY_RUN','SUPPLY RUN','SPECIAL',0,
@@ -22,11 +27,11 @@ INSERT INTO missions (code, mission_name, kind, position, description, location_
  'Un ancien signal vient d''etre reactive dans le secteur. Sa source reste inconnue. Le protocole de recuperation est lance. Localisez la source et poursuivez la mission.',
  '20 - 15 - 21 - 18 / 8 - 1 - 19 - 19 - 1 - 14. Hint: chaque nombre correspond a une lettre.',
  'Tour Hassan','TOWER02'),
-('BLUE_FORTRESS','THE BLUE FORTRESS','STANDARD',3,
+('BLUE_FORTRESS','THE LOST GATE','STANDARD',3,
  'Un signal se cache dans le quartier fortifie au-dessus de l''eau. Exploitez les touristes, les ruelles et les maisons bleues pour le retrouver.',
  'Murs bleus, ruelles etroites et l''ocean au bout de la rue. Une kasbah historique ou chaque porte a sa couleur et ou les chats regnent. Where am I?',
  'Kasbah des Oudayas','FORT03'),
-('THE_HARBOUR','THE HARBOUR','STANDARD',4,
+('THE_HARBOUR','THE CONFLUENCE','STANDARD',4,
  'Les missions les plus sociales et les plus chaotiques vivent ici. Suivez l''eau jusqu''a l''endroit ou reposent les bateaux.',
  'La ou le fleuve rejoint la mer et ou les bateaux s''alignent. On vient y marcher, manger et regarder le port. Ni plage, ni port de commerce : un lieu de loisir au bord de l''eau. Where am I?',
  'Marina (Bouregreg)','PORT04');

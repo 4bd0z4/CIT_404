@@ -1,6 +1,6 @@
 export type Phase = 'LOBBY' | 'CHALLENGES' | 'MISSIONS' | 'ENDGAME' | 'CLOSED'
 export type PlayablePhase = 'CHALLENGES' | 'MISSIONS' | 'ENDGAME'
-export type ItemType = 'HINT' | 'INSURANCE' | 'BOOST' | 'ACCESS'
+export type ItemType = 'HINT' | 'INSURANCE' | 'BOOST' | 'ACCESS' | 'MISSION_TOOL'
 export type AppliesTo = 'ANY' | 'MISSION' | 'CHALLENGE' | 'ENDGAME'
 export type Category = 'CP' | 'CTF' | 'DATA'
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD'
@@ -127,6 +127,7 @@ export interface Mission {
   unlocked: boolean
   /** Only present once the team spent a Location Coordinates item on it. */
   coordinates: string | null
+  location_name: string | null
   team_status: 'PURCHASED' | 'COMPLETED' | 'FAILED' | 'REFUNDED' | null
   team_difficulty: Difficulty | null
   deadline_at: string | null
@@ -289,6 +290,7 @@ export interface AdminMission {
   description: string
   location_hint: string | null
   coordinates: string | null
+  location_name: string | null
   /** Admin-only: read out on site to a team that has reached the spot. */
   access_code: string | null
   is_active: boolean

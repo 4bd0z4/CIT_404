@@ -276,6 +276,7 @@ router.get('/missions', async (req, res, next) => {
             `SELECT m.id, m.code, m.mission_name, m.kind, m.description, m.location_hint, m.position,
                     (tma.team_id IS NOT NULL) AS unlocked,
                     CASE WHEN coord.team_id IS NOT NULL THEN m.coordinates END AS coordinates,
+                    CASE WHEN tma.team_id IS NOT NULL THEN m.location_name END AS location_name,
                     tm.status     AS team_status,
                     tm.difficulty AS team_difficulty,
                     tm.deadline_at,

@@ -13,6 +13,9 @@ import type { ItemType, MarketItem } from '@/types'
 
 const GROUPS: { type: ItemType; title: string; blurb: string }[] = [
   { type: 'HINT',      title: 'Hints',           blurb: 'Stuck? Buy a hint to get unstuck. Works on CTF challenges.' },
+  { type: 'MISSION_TOOL', title: 'Mission Tools',  blurb: 'Resign, reroll, or boost your field missions.' },
+  { type: 'BOOST',     title: 'Boosts',          blurb: 'Time extensions and reward multipliers for missions.' },
+  { type: 'ACCESS',    title: 'Intel',            blurb: 'Location coordinates and other intel.' },
   { type: 'INSURANCE', title: 'Insurance',      blurb: 'A failed mission without insurance is a lost investment.' },
   { type: 'BOOST',     title: 'Boosts',         blurb: 'Advantages that change how a mission plays out.' },
   { type: 'ACCESS',    title: 'Special Access', blurb: 'Unlock content locked behind the network.' },

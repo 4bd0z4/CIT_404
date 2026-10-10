@@ -173,6 +173,13 @@ function MissionCard({
         <p className="text-[11px] leading-relaxed text-term/65">{mission.description}</p>
 
         {/* Location intel: what the operators need to find the place. */}
+        {/* Real location name revealed after unlock */}
+        {mission.unlocked && mission.location_name && (
+          <div className="mb-2 flex items-center gap-2 text-xs font-bold text-term">
+            <span className="text-term/50">📍</span> {mission.location_name}
+          </div>
+        )}
+
         {mission.location_hint && (
           <div className="border-l-2 border-warn/50 bg-black/40 py-2.5 pr-3 pl-3">
             <div className="flex items-center gap-1.5 text-[10px] tracking-[0.14em] text-warn/70 uppercase">

@@ -229,6 +229,60 @@ async function useItem({ teamId, operatorId, itemCode, missionCode = null, chall
             revealed.challengeId = challengeId;
         }
 
+        // ---- Mission Resign: abandon active mission, no refund ----
+        if (item.code === 'MISSION_RESIGN' && mission) {
+            const { rows: tmRows } = await client.query(
+                `SELECT id FROM team_missions
+                  WHERE team_id = $1 AND mission_id = $2 AND status = 'PURCHASED'`,
+                [teamId, mission.id]
+            );
+            if (!tmRows[0]) throw new EconomyError('NO ACTIVE MISSION TO RESIGN FROM.', 400);
+            await client.query(
+                `DELETE FROM team_missions WHERE id = $1`, [tmRows[0].id]
+            );
+            revealed.resigned = true;
+        }
+
+        // ---- Mission Reroll: re-open a completed/failed mission ----
+        if (item.code === 'MISSION_REROLL' && mission) {
+            const { rows: tmRows } = await client.query(
+                `SELECT id, status FROM team_missions
+                  WHERE team_id = $1 AND mission_id = $2
+                    AND status IN ('COMPLETED','FAILED')
+                  ORDER BY resolved_at DESC LIMIT 1`,
+                [teamId, mission.id]
+            );
+            if (!tmRows[0]) throw new EconomyError('NO RESOLVED MISSION TO REROLL.', 400);
+            await client.query('DELETE FROM team_missions WHERE id = $1', [tmRows[0].id]);
+            revealed.rerolled = true;
+        }
+
+        // ---- Time Boost: extend the active mission timer ----
+        if (item.code === 'TIME_BOOST' && mission) {
+            const extraMin = item.payload?.extra_min || 10;
+            const { rows: tmRows } = await client.query(
+                `UPDATE team_missions
+                    SET deadline_at = COALESCE(deadline_at, NOW()) + ($3 || ' minutes')::interval
+                  WHERE team_id = $1 AND mission_id = $2 AND status = 'PURCHASED'
+                RETURNING deadline_at`,
+                [teamId, mission.id, extraMin]
+            );
+            if (!tmRows[0]) throw new EconomyError('NO ACTIVE MISSION TO BOOST.', 400);
+            revealed.newDeadline = tmRows[0].deadline_at;
+            revealed.extraMinutes = extraMin;
+        }
+
+        // ---- Double Reward: flag stored in ledger, checked at resolve time ----
+        if (item.code === 'DOUBLE_REWARD' && mission) {
+            const { rows: tmRows } = await client.query(
+                `SELECT id FROM team_missions
+                  WHERE team_id = $1 AND mission_id = $2 AND status = 'PURCHASED'`,
+                [teamId, mission.id]
+            );
+            if (!tmRows[0]) throw new EconomyError('NO ACTIVE MISSION TO BOOST.', 400);
+            revealed.doubleReward = true;
+        }
+
         return {
             item: { code: item.code, name: item.name, payload: item.payload },
             revealed,
@@ -455,9 +509,21 @@ async function resolveMission({ teamMissionId, adminId, outcome }) {
 
         let wallet;
         if (outcome === 'COMPLETED') {
+            // Check if the team used a Double Reward item on this mission.
+            const { rows: dblRows } = await client.query(
+                `SELECT 1 FROM ledger l JOIN items i ON i.id = l.item_id
+                  WHERE l.team_id = $1 AND l.mission_id = $2
+                    AND l.kind = 'ITEM_USE' AND i.code = 'DOUBLE_REWARD'
+                  LIMIT 1`,
+                [tm.team_id, tm.mission_id]
+            );
+            const mult = dblRows[0] ? 2 : 1;
             wallet = await applyDelta(client, {
-                teamId: tm.team_id, adminId, amount: tm.reward, energy: tm.core_energy,
-                kind: 'MISSION_REWARD', missionId: tm.mission_id, note: tm.mission_name,
+                teamId: tm.team_id, adminId,
+                amount: tm.reward * mult,
+                energy: tm.core_energy * mult,
+                kind: 'MISSION_REWARD', missionId: tm.mission_id,
+                note: mult > 1 ? `${tm.mission_name} (×2)` : tm.mission_name,
             });
         } else {
             const { rows: insured } = await client.query(

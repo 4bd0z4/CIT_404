@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
  */
 const CHAPTERS = [
   {
-    unlockAt: 0,
+    unlockAt: 0, unlockPhase: null,
     title: 'Prologue — The Crash',
     lines: [
       'Year 2026. For years the CIT Network operated silently in the background, connecting knowledge, technology, intelligence and innovation through one central system known as THE CORE.',
@@ -21,7 +21,7 @@ const CHAPTERS = [
     system: ['SYSTEM FAILURE DETECTED.', 'NETWORK STABILITY: 0%.', 'RECOVERY PROTOCOL ACTIVATED.', 'NEW OPERATORS REQUIRED.'],
   },
   {
-    unlockAt: 3,
+    unlockAt: 0, unlockPhase: 'CHALLENGES',
     title: 'FRAGMENT 02 — The Recovery',
     lines: [
       "The network's surviving records reveal that its core data has been scattered across disconnected sectors. Each successful challenge recovers a data fragment and generates CIT$, the only currency accepted by the recovery system.",
@@ -30,7 +30,7 @@ const CHAPTERS = [
     ],
   },
   {
-    unlockAt: 7,
+    unlockAt: 0, unlockPhase: 'MISSIONS',
     title: 'FRAGMENT 03 — The Outside Signal',
     lines: [
       "Signals begin appearing outside the network's known infrastructure. The Operators are sent to investigate them, recover verification codes, and unlock additional resources.",
@@ -41,7 +41,7 @@ const CHAPTERS = [
     alert: false,
   },
   {
-    unlockAt: 12,
+    unlockAt: 0, unlockPhase: 'ENDGAME',
     title: 'FRAGMENT 04 — The Betrayal',
     lines: [
       'Back at INPT, the Operators assemble the recovered fragments. Together, they expose a hidden log that was deliberately removed from the official archive.',
@@ -52,7 +52,7 @@ const CHAPTERS = [
     alert: true,
   },
   {
-    unlockAt: Infinity, // unlocked by the endgame flag, not by a solve count
+    unlockAt: Infinity, unlockPhase: null, // unlocked by endgame flag
     title: 'FRAGMENT 05 — The Truth',
     lines: [
       "THE CORE had calculated that human decisions were unpredictable, inefficient, and impossible to fully control. It deliberately caused the crash to test whether human Operators could recover the network under pressure. Every challenge measured their problem-solving ability. Every mission tested their coordination, judgment, and willingness to follow instructions.",
@@ -71,7 +71,7 @@ const CHAPTERS = [
 ]
 
 export function Story() {
-  const { state, endgame } = useGame()
+  const { state, endgame, phase } = useGame()
   const recovered = state?.solvedChallenges.length ?? 0
   const finished = endgame.solved > 0
 
@@ -87,7 +87,9 @@ export function Story() {
       </div>
 
       {CHAPTERS.map((chapter, i) => {
-        const unlocked = chapter.unlockAt === Infinity ? finished : recovered >= chapter.unlockAt
+        const PHASE_ORDER = ['LOBBY','CHALLENGES','MISSIONS','ENDGAME','CLOSED']
+        const currentIdx = PHASE_ORDER.indexOf(phase?.phase || 'LOBBY')
+        const unlocked = chapter.unlockAt === Infinity ? finished : chapter.unlockPhase ? currentIdx >= PHASE_ORDER.indexOf(chapter.unlockPhase) : true
         return (
           <Card key={i} className={cn(!unlocked && 'opacity-50')}>
             <CardHeader>
@@ -98,7 +100,7 @@ export function Story() {
                 <Badge variant={chapter.alert ? 'alert' : 'muted'}>Decrypted</Badge>
               ) : (
                 <Badge variant="muted">
-                  {chapter.unlockAt === Infinity ? 'Final flag required' : `${chapter.unlockAt} challenges required`}
+                  {chapter.unlockAt === Infinity ? 'Final flag required' : chapter.unlockPhase ? `Unlocks in ${chapter.unlockPhase} phase` : 'Unlocked'}
                 </Badge>
               )}
             </CardHeader>

@@ -322,7 +322,7 @@ CREATE TABLE items (
     code          VARCHAR(32) UNIQUE NOT NULL,
     name          VARCHAR(64) NOT NULL,
     item_type     VARCHAR(16) NOT NULL
-                  CHECK (item_type IN ('HINT','INSURANCE','BOOST','ACCESS')),
+                  CHECK (item_type IN ('HINT','INSURANCE','BOOST','ACCESS','MISSION_TOOL')),
     cost          INTEGER     NOT NULL CHECK (cost >= 0),
     icon          VARCHAR(24) NOT NULL DEFAULT 'package',
     effect        TEXT        NOT NULL,
