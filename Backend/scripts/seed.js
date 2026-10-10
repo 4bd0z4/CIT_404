@@ -129,6 +129,62 @@ async function main() {
         );
     }
     console.log(`CHALLENGES : ${challenges.length} loaded (private values hashed)`);
+
+    // --- Post-challenge patches (hints, deactivations) -------------------
+    // These run AFTER the upsert so they are not overwritten by is_active=TRUE.
+    await db.query(`
+        -- Deactivate web challenges (no AWS host deployed)
+        UPDATE challenges SET is_active = false
+          WHERE code IN ('CTF-WE-01','CTF-WE-02','CTF-WE-03');
+
+        -- CTF hints
+        UPDATE challenges SET hint1='Base64.' WHERE code='CTF-CR-01';
+        UPDATE challenges SET hint1='Aktar kalma sma3tiha had 3 weeks "bizu" hiya l key.' WHERE code='CTF-CR-02';
+        UPDATE challenges SET hint1='Each chunk is a character.' WHERE code='CTF-CR-03';
+        UPDATE challenges SET hint1='The URL has the tool that you should use.' WHERE code='CTF-OS-01';
+        UPDATE challenges SET hint1='9lab 3la chi blassa fl INPT fl maps.' WHERE code='CTF-OS-02';
+        UPDATE challenges SET hint1='Maybe you should check the past code, not the code that you see now.' WHERE code='CTF-OS-03';
+        UPDATE challenges SET hint1='Check CIT Instagram account.' WHERE code='CTF-MI-01';
+        UPDATE challenges SET hint1='There is an eval in the code that will be so useful.', hint2='Use int() function, and use strings.' WHERE code='CTF-MI-02';
+        UPDATE challenges SET hint1='Some lines have useful information.', hint2='The flag is scattered in lines in the logs.' WHERE code='CTF-MI-04';
+        UPDATE challenges SET hint1='Look for the metadata of the image.' WHERE code='CTF-ST-01';
+        UPDATE challenges SET hint1='Spectrogram.' WHERE code='CTF-ST-02';
+        UPDATE challenges SET hint1='Search about injections vulnerability.', hint2='Use SQL injection.' WHERE code='CTF-WE-01';
+        UPDATE challenges SET hint1='Look carefully in the URL — something changes every time. You can exploit it.' WHERE code='CTF-WE-02';
+        UPDATE challenges SET hint1='There is not only the HTML code. Search for JavaScript code.', hint2='There is a strange variable in the JavaScript file.' WHERE code='CTF-WE-03';
+
+        -- CP hints
+        UPDATE challenges SET
+          hint1='In Python, use a for loop to examine each element. Use an if condition to filter. Pay attention to the difference between negative values and zero.',
+          hint2='Create an empty list for valid values. Python''s append() lets you add each valid value as you iterate. Since you process left to right, order is preserved. Print the size before printing elements.'
+        WHERE code='CP-A';
+        UPDATE challenges SET
+          hint1='Think about the value needed to pair with each token. If the current token is A_i, what must another have so their sum equals K? You cannot use the same index twice.',
+          hint2='Checking every pair is too slow for N=10^5. Use a dictionary to remember visited values and indices. Scan left to right, look for the complement before storing. This achieves O(N).'
+        WHERE code='CP-B';
+        UPDATE challenges SET
+          hint1='Verify two independent conditions. Count occurrences of a specific string and compare neighbors. Remember "WA", "TLE", and "RTE" all represent errors.',
+          hint2='Use a counter for "AC" tokens, compare with T. Iterate with indices, check each "AC" token''s previous and next neighbors. If either condition fails: "FRAUDULENT".'
+        WHERE code='CP-C';
+        UPDATE challenges SET
+          hint1='A valid contiguous sequence can contain at most K negative numbers. Think about examining consecutive elements while tracking negative count. Zero is not corrupted!',
+          hint2='Use two pointers for window boundaries. Expand right, track negatives. When count exceeds K, move left until valid. Update max length at each step. O(N) complexity.'
+        WHERE code='CP-D';
+        UPDATE challenges SET
+          hint1='Each log message has been reversed. The keyword may not appear in its usual form. Strings can be reversed using slicing. Which version should you inspect for citlogin?',
+          hint2='Reverse each corrupted string first, then use Python''s in operator to check for citlogin as a substring. Keep a counter for matches.'
+        WHERE code='CP-E';
+        UPDATE challenges SET
+          hint1='Each partition must contain consecutive cells. Minimize the largest partition sum. The answer cannot be smaller than the largest cell, nor exceed the total sum.',
+          hint2='Use binary search on the maximum allowed partition load. For a candidate limit, greedily scan left to right, starting a new partition when adding the next cell exceeds the limit.'
+        WHERE code='CP-F';
+        UPDATE challenges SET
+          hint1='A string can be reversed using slicing. Compare each fragment with its reverse. Track frequencies. Palindromes need careful counting since reversing them gives the same string.',
+          hint2='Use collections.Counter for frequencies. For each string and its reverse, count unordered pairs without double-counting. Check for odd-frequency palindromes. Apply status rules in priority order.'
+        WHERE code='CP-G';
+    `);
+    console.log('PATCHES : web deactivated, all hints applied');
+
     challenges.forEach((c) => console.log(
         `  ${c.code.padEnd(12)} ${String(c.reward).padStart(4)} CIT$ | ${String(c.core_energy).padStart(3)} CE`
     ));
