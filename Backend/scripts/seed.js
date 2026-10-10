@@ -185,6 +185,18 @@ async function main() {
     `);
     console.log('PATCHES : web deactivated, all hints applied');
 
+    // --- Resource URLs for challenge files ---
+    await db.query(`
+        UPDATE challenges SET resource_type='DOWNLOAD', resource_url='/challs/cr01-cipher.txt' WHERE code='CTF-CR-01';
+        UPDATE challenges SET resource_type='DOWNLOAD', resource_url='/challs/cr02-cipher.txt' WHERE code='CTF-CR-02';
+        UPDATE challenges SET resource_type='DOWNLOAD', resource_url='/challs/cr03-binary.txt' WHERE code='CTF-CR-03';
+        UPDATE challenges SET resource_type='DOWNLOAD', resource_url='/challs/mi04-server.log' WHERE code='CTF-MI-04';
+        UPDATE challenges SET resource_type='DOWNLOAD', resource_url='/challs/st01-bizu.jpg' WHERE code='CTF-ST-01';
+        UPDATE challenges SET resource_type='DOWNLOAD', resource_url='/challs/st02-signal.wav' WHERE code='CTF-ST-02';
+        UPDATE challenges SET resource_type='SERVICE', resource_url='nc altaria.proxy.rlwy.net 36043' WHERE code='CTF-MI-02';
+        UPDATE challenges SET resource_type='EXTERNAL', resource_url='https://cit-challenges.github.io/wayback-machine-challenge/' WHERE code='CTF-OS-01';
+    `);
+
     challenges.forEach((c) => console.log(
         `  ${c.code.padEnd(12)} ${String(c.reward).padStart(4)} CIT$ | ${String(c.core_energy).padStart(3)} CE`
     ));
