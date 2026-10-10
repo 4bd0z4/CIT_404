@@ -20,6 +20,7 @@ interface FeedRow {
 
 const KIND_TEXT: Record<string, string> = {
   CHALLENGE_REWARD: 'recovered',
+  DCR_REWARD: 'retrieved',
   FIRST_BLOOD: 'took first blood on',
   ITEM_PURCHASE: 'acquired',
   MISSION_PURCHASE: 'deployed on',

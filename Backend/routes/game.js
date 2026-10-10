@@ -481,7 +481,7 @@ router.get('/feed', async (_req, res, next) => {
             `SELECT t.team_name, l.kind, l.note, l.created_at
                FROM ledger l JOIN teams t ON t.id = l.team_id
               WHERE l.kind IN ('CHALLENGE_REWARD','FIRST_BLOOD','ITEM_PURCHASE',
-                               'MISSION_PURCHASE','MISSION_REWARD','ENDGAME_REWARD')
+                               'MISSION_PURCHASE','MISSION_REWARD','ENDGAME_REWARD','DCR_REWARD')
               ORDER BY l.created_at DESC LIMIT 15`
         );
         res.json(rows);

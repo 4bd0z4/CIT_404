@@ -35,6 +35,7 @@ const Ledger = lazy(() => import('@/pages/admin/Ledger').then((m) => ({ default:
 
 export function App() {
   const { subject, booting } = useAuth()
+  const missionOnly = subject?.kind === 'admin' && subject.role === 'mission_admin'
 
   // The session is restored from the httpOnly cookie before anything
   // renders, so a refresh mid-game never bounces operators to the login.
@@ -86,15 +87,26 @@ export function App() {
         path="/admin"
         element={subject?.kind === 'admin' ? <AdminLayout /> : <Navigate to="/admin/login" replace />}
       >
-        <Route index element={<Dashboard />} />
-        <Route path="teams" element={<Teams />} />
-        <Route path="teams/:id" element={<TeamDetail />} />
-        <Route path="items" element={<Items />} />
-        <Route path="inventory" element={<Inventory />} />
-        <Route path="missions" element={<AdminMissions />} />
-        <Route path="endgame" element={<AdminEndgame />} />
-        <Route path="alerts" element={<Alerts />} />
-        <Route path="ledger" element={<Ledger />} />
+        {missionOnly ? (
+          <>
+            {/* Mission staff see the missions area and nothing else. */}
+            <Route index element={<Navigate to="/admin/missions" replace />} />
+            <Route path="missions" element={<AdminMissions />} />
+            <Route path="*" element={<Navigate to="/admin/missions" replace />} />
+          </>
+        ) : (
+          <>
+            <Route index element={<Dashboard />} />
+            <Route path="teams" element={<Teams />} />
+            <Route path="teams/:id" element={<TeamDetail />} />
+            <Route path="items" element={<Items />} />
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="missions" element={<AdminMissions />} />
+            <Route path="endgame" element={<AdminEndgame />} />
+            <Route path="alerts" element={<Alerts />} />
+            <Route path="ledger" element={<Ledger />} />
+          </>
+        )}
       </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

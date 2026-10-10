@@ -264,6 +264,21 @@ function MissionCard({
               {mission.team_status === 'COMPLETED' ? 'Mission complete' : 'Mission active'}
               {mission.team_difficulty && ` · ${mission.team_difficulty}`}
             </div>
+            {mission.assigned_task_label && (
+              <div className="mt-3 border-2 border-warn/70 bg-warn/5 p-3 text-left">
+                <div className="text-[10px] font-bold tracking-[0.16em] text-warn uppercase">
+                  Your task
+                </div>
+                <div className="mt-1 font-display text-base tracking-[0.1em] text-warn">
+                  {mission.assigned_task_label}
+                </div>
+                {mission.assigned_task_description && (
+                  <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-line text-term/80">
+                    {mission.assigned_task_description}
+                  </p>
+                )}
+              </div>
+            )}
             {deadline !== null && mission.team_status === 'PURCHASED' && (
               <div
                 className={cn(

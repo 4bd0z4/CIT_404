@@ -8,7 +8,7 @@ export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD'
 export type LedgerKind =
   | 'CHALLENGE_REWARD' | 'FIRST_BLOOD' | 'ITEM_PURCHASE' | 'ITEM_USE'
   | 'MISSION_PURCHASE' | 'MISSION_REWARD' | 'ENDGAME_REWARD'
-  | 'NOTIF_REWARD' | 'NOTIF_PENALTY' | 'ADMIN_ADJUST' | 'SEED'
+  | 'NOTIF_REWARD' | 'NOTIF_PENALTY' | 'DCR_REWARD' | 'ADMIN_ADJUST' | 'SEED'
 
 export interface TeamSubject {
   kind: 'team'
@@ -124,6 +124,9 @@ export interface Mission {
   team_status: 'PURCHASED' | 'COMPLETED' | 'FAILED' | 'REFUNDED' | null
   team_difficulty: Difficulty | null
   deadline_at: string | null
+  /** Random task the platform assigned at deploy time; null until deployed. */
+  assigned_task_label: string | null
+  assigned_task_description: string | null
   tiers: MissionTier[]
 }
 

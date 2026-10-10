@@ -272,6 +272,7 @@ router.get('/missions/pending', async (_req, res, next) => {
         const { rows } = await db.query(
             `SELECT tm.id, tm.purchased_at, tm.deadline_at, tm.difficulty, tm.paid_amount,
                     t.team_name, t.id AS team_id, m.mission_name, mt.reward, mt.core_energy,
+                    task.label AS task_label, task.description AS task_description,
                     EXISTS (
                         SELECT 1 FROM ledger l JOIN items i ON i.id = l.item_id
                          WHERE l.team_id = tm.team_id AND l.mission_id = tm.mission_id
@@ -282,6 +283,7 @@ router.get('/missions/pending', async (_req, res, next) => {
                JOIN missions m ON m.id = tm.mission_id
           LEFT JOIN mission_tiers mt ON mt.mission_id = tm.mission_id
                                     AND mt.difficulty = tm.difficulty
+          LEFT JOIN mission_tasks task ON task.id = tm.assigned_task_id
               WHERE tm.status = 'PURCHASED'
               ORDER BY tm.deadline_at NULLS LAST, tm.purchased_at`
         );

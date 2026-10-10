@@ -34,11 +34,16 @@ const PHASES: { value: Phase; short: string }[] = [
 export function AdminLayout() {
   const { admin, logout } = useAuth()
   const queryClient = useQueryClient()
+  // Mission staff only validate field missions: the overview and phase APIs
+  // are closed to them, so do not call them or show their controls.
+  const missionOnly = admin?.role === 'mission_admin'
+  const nav = missionOnly ? NAV.filter((n) => n.to === '/admin/missions') : NAV
 
   const { data } = useQuery({
     queryKey: ['admin-overview'],
     queryFn: () => apiGet<AdminOverview>('/admin/overview'),
     refetchInterval: 10_000,
+    enabled: !missionOnly,
   })
 
   const timeLeft = useTimeLeft(data?.phase.phase_ends_at)
@@ -71,6 +76,7 @@ export function AdminLayout() {
 
           {/* Switching phase is the single most consequential control here:
               it locks every other tab for every team at once. */}
+          {!missionOnly && (
           <div className="flex flex-wrap items-center gap-1">
             <span className="mr-1 text-[10px] tracking-[0.14em] text-term/35 uppercase">Phase</span>
             {PHASES.map((p) => (
@@ -99,6 +105,7 @@ export function AdminLayout() {
               </span>
             )}
           </div>
+          )}
 
           <Button variant="ghost" size="sm" onClick={logout}>
             <LogOut /> Exit
@@ -106,7 +113,7 @@ export function AdminLayout() {
         </div>
 
         <nav className="mx-auto flex max-w-7xl overflow-x-auto border-t border-edge">
-          {NAV.map(({ to, label, icon: Icon, end }) => (
+          {nav.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}

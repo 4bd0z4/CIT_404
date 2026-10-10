@@ -8,7 +8,12 @@ import { Table, Tbody, Td, Th, Thead, TableWrap, Tr } from '@/components/ui/tabl
 import type { LedgerRow } from '@/types'
 
 export const KIND_LABEL: Record<string, string> = {
-  CHALLENGE_REWARD: 'Fragment',
+  CHALLENGE_REWARD: 'Challenge',
+  FIRST_BLOOD: 'First blood',
+  DCR_REWARD: 'Data core',
+  ENDGAME_REWARD: 'Endgame',
+  NOTIF_REWARD: 'Bonus',
+  NOTIF_PENALTY: 'Penalty',
   ITEM_PURCHASE: 'Item',
   ITEM_USE: 'Used',
   MISSION_PURCHASE: 'Mission',

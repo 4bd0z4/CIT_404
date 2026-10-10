@@ -21,7 +21,7 @@ const CHAPTERS = [
     system: ['SYSTEM FAILURE DETECTED.', 'NETWORK STABILITY: 0%.', 'RECOVERY PROTOCOL ACTIVATED.', 'NEW OPERATORS REQUIRED.'],
   },
   {
-    unlockAt: 2,
+    unlockAt: 3,
     title: 'Phase I — The Digital Economy',
     lines: [
       'The remaining resources of the CIT Network are controlled by THE MARKET. Every piece of information has a value. Every tool has a price. Every access point requires resources.',
@@ -30,7 +30,7 @@ const CHAPTERS = [
     ],
   },
   {
-    unlockAt: 5,
+    unlockAt: 7,
     title: 'The Hidden Truth',
     lines: [
       'As teams progress, they recover more than resources. They recover fragments of information.',
@@ -39,7 +39,7 @@ const CHAPTERS = [
     ],
   },
   {
-    unlockAt: 8,
+    unlockAt: 12,
     title: 'The Revelation',
     lines: ['The Operators finally understand.'],
     system: [
@@ -52,7 +52,7 @@ const CHAPTERS = [
     alert: true,
   },
   {
-    unlockAt: 11,
+    unlockAt: Infinity, // unlocked by the endgame flag, not by a solve count
     title: 'The Final Moment',
     lines: [
       'THE CORE was never the victim. It caused THE CRASH. It shut down the network deliberately, scattered its own fragments, and created the Recovery Protocol.',
@@ -65,8 +65,9 @@ const CHAPTERS = [
 ]
 
 export function Story() {
-  const { state } = useGame()
+  const { state, endgame } = useGame()
   const recovered = state?.solvedChallenges.length ?? 0
+  const finished = endgame.solved > 0
 
   return (
     <div className="space-y-4">
@@ -75,12 +76,12 @@ export function Story() {
           <GlitchTitle>ARCHIVE</GlitchTitle>
         </h2>
         <p className="mt-1 text-[11px] tracking-[0.16em] text-term/45 uppercase">
-          {recovered} fragments recovered · chapters unlock as you progress
+          {recovered} challenges solved · chapters unlock as you progress
         </p>
       </div>
 
       {CHAPTERS.map((chapter, i) => {
-        const unlocked = recovered >= chapter.unlockAt
+        const unlocked = chapter.unlockAt === Infinity ? finished : recovered >= chapter.unlockAt
         return (
           <Card key={i} className={cn(!unlocked && 'opacity-50')}>
             <CardHeader>
@@ -90,7 +91,9 @@ export function Story() {
               {unlocked ? (
                 <Badge variant={chapter.alert ? 'alert' : 'muted'}>Decrypted</Badge>
               ) : (
-                <Badge variant="muted">{chapter.unlockAt} fragments required</Badge>
+                <Badge variant="muted">
+                  {chapter.unlockAt === Infinity ? 'Final flag required' : `${chapter.unlockAt} challenges required`}
+                </Badge>
               )}
             </CardHeader>
             <CardContent className="space-y-3">
@@ -121,7 +124,7 @@ export function Story() {
         )
       })}
 
-      {recovered >= 11 && (
+      {finished && (
         <div className="border border-alert/60 bg-alert/5 px-6 py-10 text-center">
           <p className="font-display text-lg tracking-[0.16em] text-alert">
             <TypeWriter text="DID YOU RESTORE THE SYSTEM... OR DID YOU JUST SET IT FREE?" speed={45} />

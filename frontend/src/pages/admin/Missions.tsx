@@ -22,6 +22,8 @@ interface PendingRow {
   team_name: string
   team_id: number
   mission_name: string
+  task_label: string | null
+  task_description: string | null
   reward: number
   core_energy: number
   insured: boolean
@@ -145,6 +147,7 @@ export function AdminMissions() {
                     <Th>Team</Th>
                     <Th>Mission</Th>
                     <Th>Difficulty</Th>
+                    <Th>Assigned task</Th>
                     <Th className="text-right">Paid</Th>
                     <Th className="text-right">Reward</Th>
                     <Th>Insurance</Th>
@@ -234,6 +237,20 @@ function PendingRowView({
         <Badge variant={row.difficulty === 'HARD' ? 'alert' : row.difficulty === 'MEDIUM' ? 'warn' : 'default'}>
           {row.difficulty}
         </Badge>
+      </Td>
+      <Td className="max-w-xs">
+        {row.task_label ? (
+          <>
+            <div className="font-bold text-warn">{row.task_label}</div>
+            {row.task_description && (
+              <div className="mt-0.5 text-[10px] leading-snug whitespace-pre-line text-term/60">
+                {row.task_description}
+              </div>
+            )}
+          </>
+        ) : (
+          <span className="text-term/25">--</span>
+        )}
       </Td>
       <Td className="text-right tabular-nums text-alert/70">{row.paid_amount}</Td>
       <Td className="text-right tabular-nums text-term">
