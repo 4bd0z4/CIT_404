@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, ChevronDown, Crown, Flag, Trophy, Zap } from 'lucide-react'
+import { Check, ChevronDown, Crown, Database, Download, ExternalLink, Flag, Radio, Trophy, Zap } from 'lucide-react'
 import { toast } from 'sonner'
 import { apiGet, apiPost, ApiError } from '@/lib/api'
 import { cn, stars } from '@/lib/utils'
@@ -12,13 +13,13 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogBody, DialogContent } from '@/components/ui/dialog'
 import { EmptyState, GlitchTitle } from '@/components/fx'
 import { PhaseLocked } from '@/components/PhaseGate'
-import type { Challenge, Category } from '@/types'
+import type { Challenge } from '@/types'
 
-const CATEGORIES: { key: Category; title: string; blurb: string; tone: 'default' | 'info' | 'warn' }[] = [
-  { key: 'CP',   title: 'Computational Problems', blurb: 'Logical and algorithmic problems. Harder problems pay more.', tone: 'default' },
-  { key: 'CTF',  title: 'Capture the Flag',       blurb: 'Explore, analyze, exploit, recover the hidden flags.',        tone: 'info' },
-  { key: 'DATA', title: 'Data Challenges',        blurb: 'Analyze corrupted fragments and recover the information.',    tone: 'warn' },
+const CATEGORIES: { key: 'CP' | 'CTF'; title: string; blurb: string; tone: 'default' | 'info' }[] = [
+  { key: 'CP',  title: 'Competitive Programming', blurb: 'Solve on HackerRank, then submit the completion key here.', tone: 'default' },
+  { key: 'CTF', title: 'Capture the Flag', blurb: 'Crypto, OSINT, Misc, Steganography and Web challenges.', tone: 'info' },
 ]
+const CTF_FILTERS = ['ALL', 'Crypto', 'OSINT', 'Misc', 'Steganography', 'Web'] as const
 
 interface SolveResult {
   reward: number
@@ -30,77 +31,38 @@ interface SolveResult {
 
 export function Challenges() {
   const { isPhaseOpen } = useGame()
-  const [open, setOpen] = useState<Category | null>('CP')
+  const [open, setOpen] = useState<'CP' | 'CTF' | 'DCR' | null>('CP')
+  const [ctfFilter, setCtfFilter] = useState<(typeof CTF_FILTERS)[number]>('ALL')
   const [firstBlood, setFirstBlood] = useState<SolveResult | null>(null)
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['challenges'],
-    queryFn: () => apiGet<{ locked: boolean; challenges: Challenge[] }>('/game/challenges'),
-  })
-
-  if (!isPhaseOpen('CHALLENGES') || data?.locked) {
-    return <PhaseLocked title="Challenges — Phase I" phase="CHALLENGES" />
-  }
-
+  const { data, isLoading } = useQuery({ queryKey: ['challenges'], queryFn: () => apiGet<{ locked: boolean; challenges: Challenge[] }>('/game/challenges') })
+  if (!isPhaseOpen('CHALLENGES') || data?.locked) return <PhaseLocked title="Challenges — Phase I" phase="CHALLENGES" />
   const list = data?.challenges ?? []
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-baseline justify-between">
-        <h2 className="font-display text-lg tracking-[0.18em] text-term uppercase">
-          Challenges · Phase I
-        </h2>
-        <Badge>
-          {list.filter((c) => c.solved).length} / {list.length} recovered
-        </Badge>
-      </div>
-
-      {CATEGORIES.map((cat) => {
-        const items = list.filter((c) => c.category === cat.key)
-        const isOpen = open === cat.key
-        return (
-          <Card key={cat.key}>
-            <button
-              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-term/5"
-              onClick={() => setOpen(isOpen ? null : cat.key)}
-              aria-expanded={isOpen}
-            >
-              <div>
-                <div className="font-display text-sm tracking-[0.16em] text-term uppercase">
-                  {cat.title}
-                </div>
-                <div className="mt-0.5 text-[11px] text-term/45">{cat.blurb}</div>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <Badge variant={cat.tone}>
-                  {items.filter((c) => c.solved).length}/{items.length}
-                </Badge>
-                <ChevronDown
-                  className={cn('size-4 text-term/50 transition-transform', isOpen && 'rotate-180')}
-                />
-              </div>
-            </button>
-
-            {isOpen && (
-              <CardContent className="space-y-2 border-t border-edge pt-4">
-                {isLoading ? (
-                  <EmptyState>DECRYPTING CHALLENGE INDEX…</EmptyState>
-                ) : items.length === 0 ? (
-                  <EmptyState>NO {cat.key} CHALLENGES AVAILABLE.</EmptyState>
-                ) : (
-                  items.map((c) => (
-                    <ChallengeCard key={c.id} challenge={c} onFirstBlood={setFirstBlood} />
-                  ))
-                )}
-              </CardContent>
-            )}
-          </Card>
-        )
-      })}
-
-      <FirstBloodModal result={firstBlood} onClose={() => setFirstBlood(null)} />
-    </div>
-  )
+  return <div className="space-y-4">
+    <div className="flex items-baseline justify-between"><h2 className="font-display text-lg tracking-[0.18em] text-term uppercase">Challenges · Phase I</h2><Badge>{list.filter(c => c.solved).length} / {list.length} recovered</Badge></div>
+    {CATEGORIES.map(cat => {
+      const allItems = list.filter(c => c.category === cat.key)
+      const items = cat.key === 'CTF' && ctfFilter !== 'ALL' ? allItems.filter(c => c.subcategory === ctfFilter) : allItems
+      const isOpen = open === cat.key
+      return <Card key={cat.key}>
+        <button className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-term/5" onClick={() => setOpen(isOpen ? null : cat.key)} aria-expanded={isOpen}>
+          <div><div className="font-display text-sm tracking-[0.16em] text-term uppercase">{cat.title}</div><div className="mt-0.5 text-[11px] text-term/45">{cat.blurb}</div></div>
+          <div className="flex shrink-0 items-center gap-2"><Badge variant={cat.tone}>{allItems.filter(c => c.solved).length}/{allItems.length}</Badge><ChevronDown className={cn('size-4 text-term/50 transition-transform', isOpen && 'rotate-180')} /></div>
+        </button>
+        {isOpen && <CardContent className="space-y-2 border-t border-edge pt-4">
+          {cat.key === 'CTF' && <div className="mb-3 flex flex-wrap gap-1.5">{CTF_FILTERS.map(filter => <button key={filter} onClick={() => setCtfFilter(filter)} className={cn('border px-2 py-1 text-[10px] font-bold tracking-[0.08em]', ctfFilter === filter ? 'border-info bg-info text-void' : 'border-edge text-term/50 hover:border-info/60')}>{filter}</button>)}</div>}
+          {isLoading ? <EmptyState>DECRYPTING CHALLENGE INDEX…</EmptyState> : items.length === 0 ? <EmptyState>NO CHALLENGES AVAILABLE.</EmptyState> : items.map(c => <ChallengeCard key={c.id} challenge={c} onFirstBlood={setFirstBlood} />)}
+        </CardContent>}
+      </Card>
+    })}
+    <Card>
+      <button className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-warn/5" onClick={() => setOpen(open === 'DCR' ? null : 'DCR')} aria-expanded={open === 'DCR'}>
+        <div className="flex items-start gap-3"><Database className="mt-0.5 size-5 text-warn" /><div><div className="font-display text-sm tracking-[0.16em] text-warn uppercase">Data Core Retrieval</div><div className="mt-0.5 text-[11px] text-term/45">Investigate a read-only database with SQL. 15 missions, 4 levels.</div></div></div>
+        <ChevronDown className={cn('size-4 text-warn/60 transition-transform', open === 'DCR' && 'rotate-180')} />
+      </button>
+      {open === 'DCR' && <CardContent className="border-t border-edge pt-4"><p className="mb-3 text-[11px] leading-relaxed text-term/60">Run SQL to investigate the data, then submit the short answer your query helped you discover. The query and answer are always separate.</p><Button asChild className="w-full"><Link to="/challenges/dcr"><Database /> Open DCR missions</Link></Button></CardContent>}
+    </Card>
+    <FirstBloodModal result={firstBlood} onClose={() => setFirstBlood(null)} />
+  </div>
 }
 
 function ChallengeCard({
@@ -176,6 +138,11 @@ function ChallengeCard({
           </div>
         </div>
       </div>
+
+      {challenge.resource_url && <a href={challenge.resource_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 border border-info/50 bg-info/5 px-2.5 py-1.5 text-[10px] font-bold tracking-[0.08em] text-info uppercase hover:bg-info/10">
+        {challenge.resource_type === 'DOWNLOAD' ? <Download className="size-3.5" /> : challenge.resource_type === 'SERVICE' ? <Radio className="size-3.5" /> : <ExternalLink className="size-3.5" />}
+        {challenge.resource_type === 'DOWNLOAD' ? 'Download artifact' : challenge.resource_type === 'SERVICE' ? 'Open service' : 'Open challenge'}
+      </a>}
 
       {!challenge.solved && (
         <form

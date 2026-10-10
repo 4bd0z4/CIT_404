@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIT CTF — Flag Captured!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #0a0e17;
+            color: #c9d1d9;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 550px;
+            padding: 20px;
+        }
+
+        .trophy {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: #00ff41;
+            text-shadow: 0 0 30px rgba(0, 255, 65, 0.5);
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .welcome {
+            color: #8b949e;
+            font-size: 0.85rem;
+            margin-bottom: 30px;
+        }
+
+        .flag-box {
+            background: linear-gradient(145deg, #0d1117, #161b22);
+            border: 2px solid #00ff41;
+            border-radius: 12px;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .flag-box::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ff41, #00cc33, #00ff41, #33ff66);
+            border-radius: 12px;
+            z-index: -1;
+            animation: glow 3s linear infinite;
+            background-size: 300% 300%;
+        }
+
+        @keyframes glow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .flag-label {
+            font-size: 0.7rem;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+
+        .flag-value {
+            font-size: 1.3rem;
+            color: #00ff41;
+            font-weight: bold;
+            word-break: break-all;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
+            user-select: all;
+            cursor: pointer;
+            padding: 10px;
+            background: rgba(0, 255, 65, 0.05);
+            border-radius: 6px;
+        }
+
+        .info-box {
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px solid #21262d;
+            border-radius: 8px;
+            padding: 18px;
+            font-size: 0.75rem;
+            color: #8b949e;
+            line-height: 1.8;
+            text-align: left;
+        }
+
+        .info-box .label {
+            color: #00ff41;
+            font-weight: bold;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 25px;
+            color: #484f58;
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #00ff41;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="trophy">🏆</div>
+        <h1>FLAG CAPTURED!</h1>
+        <p class="welcome">Authenticated as <strong style="color:#00ff41;">{{ user }}</strong></p>
+
+        <div class="flag-box">
+            <div class="flag-label">🚩 Your Flag</div>
+            <div class="flag-value">{{ flag }}</div>
+        </div>
+
+        <div class="info-box">
+            <span class="label">Challenge:</span> SQL Injection — Login Bypass<br>
+            <span class="label">Technique:</span> Authentication bypass via crafted input<br>
+            <span class="label">Vulnerability:</span> Unsanitized user input in SQL query<br>
+            <span class="label">Lesson:</span> Always use parameterized queries!
+        </div>
+
+        <a href="/" class="back-link">← Back to Login</a>
+    </div>
+</body>
+</html>

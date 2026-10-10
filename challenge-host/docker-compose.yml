@@ -1,0 +1,186 @@
+# CIT CTF challenge-host — isolated challenge services.
+#
+# Design goals:
+#   * Each challenge runs in its own container, on its own bridge network,
+#     with no cross-talk between challenges.
+#   * Every service: non-root user, no-new-privileges, all Linux capabilities
+#     dropped, read-only root filesystem (writable tmpfs only where required),
+#     strict memory / CPU / PID limits, and bounded log files.
+#   * Only Caddy is reachable from the host. The Flask challenges are NOT
+#     published to the host directly — Caddy reverse-proxies them over the
+#     internal `edge` network. The eval-jail TCP service IS published, since
+#     it is a raw TCP challenge.
+#   * Flags are provided via the FLAG_* environment variables (see .env.example).
+#     No real flag values live in this file or the images.
+#
+# This file is intended to be totally isolated from the CIT_404 core
+# (Railway/Vercel) stack. Run it from this directory only.
+
+name: cit-challenge-host
+
+# ----------------------------------------------------------------------------
+# Reusable hardening anchors
+# ----------------------------------------------------------------------------
+x-hardening: &hardening
+  restart: unless-stopped
+  read_only: true
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  pids_limit: 128
+  mem_limit: 256m
+  memswap_limit: 256m          # == mem_limit -> swap disabled
+  cpus: 0.50
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+  ulimits:
+    nofile:
+      soft: 1024
+      hard: 2048
+
+services:
+  # --------------------------------------------------------------------------
+  # Challenge 1 — SQL injection (Flask, served by gunicorn)
+  # --------------------------------------------------------------------------
+  sqli:
+    <<: *hardening
+    build:
+      context: ./services/sqli
+    image: cit-chall/sqli:latest
+    container_name: cit-sqli
+    environment:
+      # Flag injected at runtime. Set FLAG_SQLI in your .env (never commit it).
+      FLAG: ${FLAG_SQLI:?set FLAG_SQLI in .env}
+    tmpfs:
+      # gunicorn + sqlite need a little writable scratch space.
+      - /tmp:rw,noexec,nosuid,nodev,size=16m
+    networks:
+      - edge
+    expose:
+      - "5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:5000/healthz',timeout=3).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Challenge 2 — IDOR (Flask, served by gunicorn, debug OFF)
+  # --------------------------------------------------------------------------
+  idor:
+    <<: *hardening
+    build:
+      context: ./services/idor
+    image: cit-chall/idor:latest
+    container_name: cit-idor
+    environment:
+      FLAG: ${FLAG_IDOR:?set FLAG_IDOR in .env}
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m
+    networks:
+      - edge
+    expose:
+      - "5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:5000/healthz',timeout=3).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Challenge 3 — Python eval-jail (raw TCP). INTENTIONALLY vulnerable:
+  # strongest isolation applied here. Forks a resource-limited child per eval,
+  # and the network has NO egress route (internal: true).
+  # --------------------------------------------------------------------------
+  evaljail:
+    <<: *hardening
+    build:
+      context: ./services/evaljail
+    image: cit-chall/evaljail:latest
+    container_name: cit-evaljail
+    # Tighter limits than the others — this one runs attacker code.
+    pids_limit: 64
+    mem_limit: 128m
+    memswap_limit: 128m
+    cpus: 0.50
+    environment:
+      FLAG: ${FLAG_EVALJAIL:?set FLAG_EVALJAIL in .env}
+      PORT: "9000"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=8m
+    networks:
+      - jail
+    # Published to the host because it is a raw TCP challenge. Bind to all
+    # host interfaces on a dedicated port; the EC2 security group restricts
+    # who can actually reach it.
+    ports:
+      - "9000:9000"
+    healthcheck:
+      test: ["CMD", "python", "/app/healthcheck.py"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # --------------------------------------------------------------------------
+  # Edge reverse proxy — the only HTTP entry point to the host.
+  # --------------------------------------------------------------------------
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: cit-caddy
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      # Caddy binds :80/:443 as non-root; needs this single capability.
+      - NET_BIND_SERVICE
+    mem_limit: 128m
+    pids_limit: 128
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      # Base domain for the challenge subdomains, e.g. chall.example.com.
+      CHALLENGE_DOMAIN: ${CHALLENGE_DOMAIN:-chall.example.com}
+      # Email used for Let's Encrypt ACME registration.
+      CADDY_ACME_EMAIL: ${CADDY_ACME_EMAIL:-admin@example.com}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+    depends_on:
+      - sqli
+      - idor
+
+# ----------------------------------------------------------------------------
+# Networks — one per trust boundary. `jail` has no egress.
+# ----------------------------------------------------------------------------
+networks:
+  # Caddy <-> web challenges only.
+  edge:
+    driver: bridge
+    name: cit-edge
+  # eval-jail is fully isolated: internal means no route to the internet.
+  jail:
+    driver: bridge
+    internal: true
+    name: cit-jail
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -9,6 +9,19 @@ const { requireAdmin } = require('../middleware/auth');
 const router = express.Router();
 router.use(requireAdmin);
 
+// Mission admins have a deliberately tiny API surface. Superadmins retain
+// full access. Keeping this server-side prevents hidden navigation links from
+// becoming an authorization boundary.
+router.use((req, res, next) => {
+    if (req.auth.role === 'superadmin') return next();
+    if (req.auth.role === 'mission_admin') {
+        const allowedRead = req.method === 'GET' && /^\/missions(?:\/pending)?$/.test(req.path);
+        const allowedResolve = req.method === 'POST' && /^\/missions\/\d+\/resolve$/.test(req.path);
+        if (allowedRead || allowedResolve) return next();
+    }
+    return res.status(403).json({ error: 'ACCESS DENIED', message: 'INSUFFICIENT CLEARANCE.' });
+});
+
 function handleEconomyError(err, res, next) {
     if (err instanceof economy.EconomyError) {
         return res.status(err.status).json({ error: 'DENIED', message: err.message });

@@ -92,8 +92,9 @@ router.get('/challenges', async (req, res, next) => {
         }
 
         const { rows } = await db.query(
-            `SELECT c.id, c.code, c.category, c.difficulty, c.reward, c.core_energy,
-                    c.first_blood_cit, c.first_blood_energy, c.title, c.description,
+            `SELECT c.id, c.code, c.category, c.subcategory, c.difficulty,
+                    c.reward, c.core_energy, c.first_blood_cit, c.first_blood_energy,
+                    c.title, c.description, c.resource_type, c.resource_url, c.instructions,
                     EXISTS (
                         SELECT 1 FROM submissions s
                          WHERE s.challenge_id = c.id AND s.team_id = $1 AND s.is_correct
@@ -255,6 +256,8 @@ router.get('/missions', async (req, res, next) => {
                     tm.status     AS team_status,
                     tm.difficulty AS team_difficulty,
                     tm.deadline_at,
+                    task.label       AS assigned_task_label,
+                    task.description AS assigned_task_description,
                     COALESCE(
                         json_agg(
                             json_build_object(
@@ -274,6 +277,7 @@ router.get('/missions', async (req, res, next) => {
           LEFT JOIN team_missions tm
                  ON tm.mission_id = m.id AND tm.team_id = $1
                 AND tm.status IN ('PURCHASED','COMPLETED')
+          LEFT JOIN mission_tasks task ON task.id = tm.assigned_task_id
           LEFT JOIN LATERAL (
                     SELECT l.team_id FROM ledger l JOIN items i ON i.id = l.item_id
                      WHERE l.team_id = $1 AND l.mission_id = m.id
@@ -281,7 +285,8 @@ router.get('/missions', async (req, res, next) => {
                      LIMIT 1
                ) coord ON TRUE
               WHERE m.is_active
-              GROUP BY m.id, tma.team_id, coord.team_id, tm.status, tm.difficulty, tm.deadline_at
+              GROUP BY m.id, tma.team_id, coord.team_id, tm.status, tm.difficulty, tm.deadline_at,
+                       task.label, task.description
               ORDER BY m.position, m.id`,
             [req.auth.teamId]
         );

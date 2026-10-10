@@ -43,6 +43,19 @@ function requireAdmin(req, res, next) {
     next();
 }
 
+/** Requires one of the listed admin roles. */
+function requireRole(...roles) {
+    return (req, res, next) => {
+        if (!req.auth || req.auth.kind !== 'admin' || !roles.includes(req.auth.role)) {
+            return res.status(403).json({ error: 'ACCESS DENIED', message: 'INSUFFICIENT CLEARANCE.' });
+        }
+        next();
+    };
+}
+
+const requireSuperAdmin = requireRole('superadmin');
+const requireMissionStaff = requireRole('mission_admin', 'superadmin');
+
 /** Socket.IO handshake guard - same token, same rules. */
 function socketAuth(socket, next) {
     const token = socket.handshake.auth && socket.handshake.auth.token;
@@ -55,4 +68,7 @@ function socketAuth(socket, next) {
     }
 }
 
-module.exports = { attachAuth, requireAuth, requireTeam, requireAdmin, socketAuth };
+module.exports = {
+    attachAuth, requireAuth, requireTeam, requireAdmin,
+    requireRole, requireSuperAdmin, requireMissionStaff, socketAuth,
+};

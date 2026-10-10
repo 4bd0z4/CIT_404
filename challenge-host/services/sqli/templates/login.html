@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIT CTF — Secure Login Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #0a0e17;
+            color: #c9d1d9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated matrix rain background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(0, 255, 65, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(0, 200, 255, 0.03) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 440px;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header .logo {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #00ff41;
+            text-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+        }
+
+        .header .subtitle {
+            font-size: 0.8rem;
+            color: #586069;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .challenge-badge {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .challenge-badge span {
+            background: linear-gradient(135deg, #1a1e2e, #0d1117);
+            border: 1px solid #ff6b35;
+            color: #ff6b35;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            display: inline-block;
+            box-shadow: 0 0 15px rgba(255, 107, 53, 0.15);
+        }
+
+        .login-box {
+            background: linear-gradient(145deg, #0d1117, #161b22);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 35px 30px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .login-box h2 {
+            font-size: 1.1rem;
+            color: #e6edf3;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .login-box .desc {
+            font-size: 0.75rem;
+            color: #484f58;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: #8b949e;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #c9d1d9;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #00ff41;
+            box-shadow: 0 0 0 3px rgba(0, 255, 65, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #30363d;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #00ff41, #00cc33);
+            border: none;
+            border-radius: 8px;
+            color: #0a0e17;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        .btn-login:hover {
+            background: linear-gradient(135deg, #33ff66, #00ff41);
+            box-shadow: 0 0 25px rgba(0, 255, 65, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .error-msg {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+            color: #f85149;
+            font-size: 0.8rem;
+            word-break: break-word;
+        }
+
+        .error-msg::before {
+            content: '✖ ';
+        }
+
+        .terminal-hint {
+            margin-top: 25px;
+            padding: 16px;
+            background: #0d1117;
+            border: 1px dashed #21262d;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            color: #484f58;
+            line-height: 1.6;
+        }
+
+        .terminal-hint .prompt {
+            color: #00ff41;
+        }
+
+        .terminal-hint .comment {
+            color: #6e40aa;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.65rem;
+            color: #30363d;
+            letter-spacing: 1px;
+        }
+
+        /* Blinking cursor animation */
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: #00ff41;
+            animation: blink 1s infinite;
+            vertical-align: text-bottom;
+            margin-left: 2px;
+        }
+
+        /* Scanline effect */
+        .login-box::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.008) 2px,
+                rgba(0, 255, 65, 0.008) 4px
+            );
+            pointer-events: none;
+            border-radius: 12px;
+        }
+
+        .login-box {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">CIT{_?_}<span class="cursor"></span></div>
+            <div class="subtitle">Capture The Flag — Web Exploitation</div>
+        </div>
+
+        <div class="login-box">
+            <h2>Authentication Required</h2>
+            <p class="desc">Access restricted. Authorized personnel only.</p>
+
+            {% if error %}
+            <div class="error-msg">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/login">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" placeholder="Enter username" autocomplete="off" autofocus>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="text" name="password" placeholder="Enter password" autocomplete="off">
+                </div>
+                <button type="submit" class="btn-login">Authenticate</button>
+            </form>
+
+        </div>
+
+        <div class="footer">
+            CIT CYBERSECURITY CTF &bull; SQL INJECTION MODULE
+        </div>
+    </div>
+</body>
+</html>

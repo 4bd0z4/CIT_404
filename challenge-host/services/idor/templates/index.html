@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Employee Directory</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <!-- Corridor: image + hotspots inside a relative wrapper -->
+  <div class="corridor-scene">
+    <div class="corridor-wrap">
+      <img src="{{ url_for('static', filename='corridor.png') }}" alt="Corridor" class="corridor-img" />
+      <!-- Hotspots positioned as % of the IMAGE, not the viewport -->
+      <a href="/?id=1" class="hotspot" style="left:0.8%; top:8%; width:8.8%; height:82%;"></a>
+      <a href="/?id=2" class="hotspot" style="left:16.5%; top:10%; width:7.2%; height:72%;"></a>
+      <a href="/?id=3" class="hotspot" style="left:29%; top:12%; width:5.8%; height:62%;"></a>
+      <a href="/?id=4" class="hotspot" style="left:45.5%; top:14%; width:5.8%; height:58%;"></a>
+      <a href="/?id=5" class="hotspot" style="left:61.5%; top:12%; width:5.8%; height:62%;"></a>
+      <a href="/?id=6" class="hotspot" style="left:73%; top:10%; width:7.2%; height:72%;"></a>
+      <a href="/?id=7" class="hotspot" style="left:88%; top:8%; width:8.8%; height:82%;"></a>
+    </div>
+  </div>
+</body>
+</html>

@@ -7,6 +7,8 @@ import { OperatorLayout } from '@/components/layout/OperatorLayout'
 import { Login } from '@/pages/Login'
 import { Home } from '@/pages/Home'
 import { Challenges } from '@/pages/Challenges'
+import { DcrList } from '@/pages/DcrList'
+import { DcrMission } from '@/pages/DcrMission'
 import { Missions } from '@/pages/Missions'
 import { Endgame } from '@/pages/Endgame'
 import { Market } from '@/pages/Market'
@@ -58,6 +60,8 @@ export function App() {
           <>
             <Route index element={<Home />} />
             <Route path="challenges" element={<Challenges />} />
+            <Route path="challenges/dcr" element={<DcrList />} />
+            <Route path="challenges/dcr/:id" element={<DcrMission />} />
             <Route path="missions" element={<Missions />} />
             <Route path="endgame" element={<Endgame />} />
             <Route path="market" element={<Market />} />
