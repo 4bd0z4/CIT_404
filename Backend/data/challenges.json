@@ -292,6 +292,42 @@
       "resource_type": "STATIC",
       "resource_url": null,
       "description": "Everything you need is already in your browser. Open the developer tools and inspect the page's client-side source to find what is hidden there."
+    },
+    {
+      "code": "CTF-CR-04",
+      "category": "CTF",
+      "subcategory": "Crypto",
+      "difficulty": 4,
+      "reward": 300,
+      "core_energy": 60,
+      "title": "the vault",
+      "description": ".",
+      "resource_type": "DOWNLOAD",
+      "resource_url": "/challs/crypto-hard-3d3s.txt"
+    },
+    {
+      "code": "CTF-CR-05",
+      "category": "CTF",
+      "subcategory": "Crypto",
+      "difficulty": 4,
+      "reward": 300,
+      "core_energy": 60,
+      "title": "x^y",
+      "description": ".",
+      "resource_type": "DOWNLOAD",
+      "resource_url": "/challs/crypto-hard-rsa.py"
+    },
+    {
+      "code": "CTF-MI-05",
+      "category": "CTF",
+      "subcategory": "Misc",
+      "difficulty": 4,
+      "reward": 300,
+      "core_energy": 60,
+      "title": "transmission",
+      "description": ".",
+      "resource_type": "DOWNLOAD",
+      "resource_url": "/challs/misc-hard-signal.txt"
     }
   ]
 }

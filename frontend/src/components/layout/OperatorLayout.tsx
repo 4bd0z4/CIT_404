@@ -210,7 +210,7 @@ export function OperatorLayout() {
 
             <div className="space-y-3">
               <StatMeter label="CP Solved" value={count('CP')} max={7} />
-              <StatMeter label="CTF Solved" value={count('CTF')} max={14} tone="info" />
+              <StatMeter label="CTF Solved" value={count('CTF')} max={17} tone="info" />
               <StatMeter
                 label="Missions Deployed"
                 value={state?.missions.length ?? 0}
