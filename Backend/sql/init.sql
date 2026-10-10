@@ -262,7 +262,7 @@ CREATE TABLE endgame_parts (
     position       SMALLINT     NOT NULL UNIQUE CHECK (position BETWEEN 1 AND 20),
     title          VARCHAR(128) NOT NULL,
     prompt         TEXT         NOT NULL,   -- ce que l'equipe doit chercher
-    access_code    VARCHAR(32)  NOT NULL,   -- dicte par un admin
+    access_code    TEXT         NOT NULL,   -- dicte par un admin (flag complet)
     reward_cit     INTEGER      NOT NULL DEFAULT 0 CHECK (reward_cit >= 0),
     reward_energy  INTEGER      NOT NULL DEFAULT 0 CHECK (reward_energy >= 0),
     story_fragment TEXT         NOT NULL,   -- revele une fois le code valide

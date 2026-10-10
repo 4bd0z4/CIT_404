@@ -10,7 +10,8 @@
     "seed:dcr": "node scripts/seedDcr.js",
     "db:setup": "node scripts/db-setup.js",
     "db:schema": "DB_SETUP_SEED=0 node scripts/db-setup.js",
-    "reset:teams": "node scripts/reset-teams.js"
+    "reset:teams": "node scripts/reset-teams.js",
+    "set:endgame": "node scripts/set-endgame.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

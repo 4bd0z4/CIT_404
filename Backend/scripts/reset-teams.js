@@ -22,6 +22,13 @@
  * Options:
  *   --ensure-teams=17   also create any missing TEAM 1..17 (new random codes,
  *                       printed once). Existing teams and codes are untouched.
+ *   --new-codes         give EVERY team a fresh join code and print the full
+ *                       list of all teams. Old codes stop working. Codes are
+ *                       stored hashed, so this is the only way to get a full
+ *                       printable list; without it only newly created teams
+ *                       show a code.
+ *   --lobby             also set the game phase back to LOBBY (no timer), so
+ *                       nothing is playable until an admin starts Challenges.
  *   --purge-sessions    also delete operators and sessions of teams, so every
  *                       team must log in again. Without it, anyone already
  *                       logged in stays logged in.
@@ -39,6 +46,8 @@ const STARTING_BALANCE = Number(process.env.SEED_STARTING_BALANCE || 150);
 const args = process.argv.slice(2);
 const YES = args.includes('--yes');
 const PURGE_SESSIONS = args.includes('--purge-sessions');
+const NEW_CODES = args.includes('--new-codes');
+const LOBBY = args.includes('--lobby');
 const ensureArg = args.find((a) => a.startsWith('--ensure-teams='));
 const ENSURE_TEAMS = ensureArg ? Number(ensureArg.split('=')[1]) : 0;
 
@@ -87,6 +96,8 @@ async function main() {
     const teamCount = (await db.query('SELECT count(*)::int AS n FROM teams')).rows[0].n;
     console.log(`\nTeams reset to ${STARTING_BALANCE} CIT$ / 0 energy: ${teamCount}`);
     if (ENSURE_TEAMS) console.log(`Missing teams up to TEAM ${ENSURE_TEAMS} will be created.`);
+    if (NEW_CODES) console.log('ALL teams will get NEW join codes (old codes stop working).');
+    if (LOBBY) console.log('Game phase will be set back to LOBBY.');
 
     if (!YES) {
         console.log('\nDry run only - nothing was changed.');
@@ -94,6 +105,7 @@ async function main() {
     }
 
     const newCodes = [];
+    let printList = [];
     await db.withTransaction(async (client) => {
         for (const t of tables) await client.query(`DELETE FROM ${t}`);
 
@@ -115,6 +127,25 @@ async function main() {
             }
         }
 
+        const allCodes = [];
+        if (NEW_CODES) {
+            const { rows: all } = await client.query('SELECT id, team_name FROM teams ORDER BY id');
+            for (const t of all) {
+                const code = joinCode();
+                await client.query('UPDATE teams SET join_code_hash = $2 WHERE id = $1', [t.id, await bcrypt.hash(code, 10)]);
+                allCodes.push(`  ${t.team_name.padEnd(8)} : ${code}`);
+            }
+        }
+
+        if (LOBBY) {
+            await client.query(
+                `UPDATE game_state SET phase = 'LOBBY', phase_started_at = NULL,
+                        phase_ends_at = NULL, updated_at = NOW() WHERE id = 1`
+            );
+        }
+
+        printList = NEW_CODES ? allCodes : newCodes;
+
         // One SEED row per team so SUM(ledger.amount) == cit_balance again.
         await client.query(
             `INSERT INTO ledger (team_id, kind, amount, balance_after, note)
@@ -132,10 +163,11 @@ async function main() {
     });
 
     console.log('\nRESET COMPLETE. All teams are at the starting line.');
-    if (newCodes.length) {
-        console.log('\nNEW TEAM JOIN CODES (shown once - store privately now):');
-        console.log(newCodes.join('\n'));
+    if (printList.length) {
+        console.log(`\n${NEW_CODES ? 'ALL TEAM JOIN CODES' : 'NEW TEAM JOIN CODES'} (shown once - store privately now):`);
+        console.log(printList.join('\n'));
     }
+    if (LOBBY) console.log('\nPhase is LOBBY. Start Challenges from the admin panel when ready.');
     console.log('\nTell operators to refresh their browser.');
 }
 
