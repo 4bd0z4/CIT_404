@@ -7,6 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "seed": "node scripts/seed.js",
+    "seed:dcr": "node scripts/seedDcr.js",
     "db:setup": "node scripts/db-setup.js",
     "db:schema": "DB_SETUP_SEED=0 node scripts/db-setup.js"
   },

@@ -38,9 +38,25 @@ function loadJson(p, label) {
     return JSON.parse(fs.readFileSync(p, 'utf8'));
 }
 
+/**
+ * Hashes come from DCR_ANSWER_HASHES_JSON (one-line JSON env var, convenient
+ * on a host where the file is not present) if set, else from the hashes file.
+ */
+function loadHashes() {
+    if (process.env.DCR_ANSWER_HASHES_JSON) {
+        try {
+            return JSON.parse(process.env.DCR_ANSWER_HASHES_JSON);
+        } catch (e) {
+            console.error('DCR_ANSWER_HASHES_JSON is not valid JSON:', e.message);
+            process.exit(1);
+        }
+    }
+    return loadJson(hashesPath, 'Answer-hashes file');
+}
+
 (async () => {
     const data = loadJson(missionsPath, 'Missions file');
-    const hashes = loadJson(hashesPath, 'Answer-hashes file');
+    const hashes = loadHashes();
 
     const pool = new Pool({
         connectionString: process.env.DATABASE_URL,

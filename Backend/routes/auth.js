@@ -10,15 +10,24 @@ const {
 const router = express.Router();
 
 /**
- * Brute force is the realistic threat here: team join codes are short
- * enough to be typed by three people on their phones, so the login route
- * is rate limited per IP.
+ * Brute force is the realistic threat, but all operators at the venue share
+ * one public IP (NAT), so an IP-keyed limiter would throttle the whole room.
+ * Instead we key by the identity being authenticated — the team name (or the
+ * admin username) — so each account gets its own budget regardless of how
+ * many people are behind the same IP. Brute-forcing a specific team's code is
+ * still capped; other teams are unaffected. A generous ceiling absorbs three
+ * operators logging in plus reconnects, while 8-char codes over a 32-symbol
+ * alphabet keep the brute-force space astronomically larger than the limit.
  */
 const loginLimiter = rateLimit({
     windowMs: 10 * 60 * 1000,
-    limit: 20,
+    limit: 60,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
+    keyGenerator: (req) => {
+        const id = (req.body && (req.body.teamName || req.body.username) || '').toString().trim().toLowerCase();
+        return id ? `id:${id}` : `ip:${req.ip}`;
+    },
     message: { error: 'TOO MANY ATTEMPTS', message: 'CONNECTION THROTTLED BY THE CORE.' },
 });
 
