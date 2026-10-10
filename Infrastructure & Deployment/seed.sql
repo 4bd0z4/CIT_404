@@ -39,7 +39,7 @@ INSERT INTO missions (code, mission_name, kind, position, description, location_
 INSERT INTO mission_tiers (mission_id, difficulty, entry_cost, reward, core_energy, time_limit_min)
 SELECT m.id, t.difficulty, t.entry_cost, t.reward, t.core_energy, t.time_limit_min
 FROM missions m JOIN (VALUES
-  ('SUPPLY_RUN','EASY',0,200,0,20),
+  ('SUPPLY_RUN','EASY',0,200,0,NULL),
   ('GREEN_SECTOR','EASY',60,120,10,40),
   ('GREEN_SECTOR','MEDIUM',120,250,22,30),
   ('GREEN_SECTOR','HARD',200,450,38,20),
