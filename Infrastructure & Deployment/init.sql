@@ -149,6 +149,8 @@ CREATE TABLE challenges (
     instructions TEXT,
     -- Le flag est HASHE : un dump de la base ne donne pas les reponses.
     flag_hash   TEXT         NOT NULL,
+    hint1       TEXT,          -- revealed when the team uses HINT_L1
+    hint2       TEXT,          -- revealed when the team uses HINT_L2
     is_active   BOOLEAN      NOT NULL DEFAULT TRUE
 );
 

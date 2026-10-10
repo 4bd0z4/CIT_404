@@ -98,6 +98,23 @@ function ChallengeCard({
 
   const bountyOpen = !challenge.first_blood_taken && challenge.first_blood_cit > 0
 
+  const useHint = useMutation({
+    mutationFn: (level: 1 | 2) =>
+      apiPost<{ revealed?: { hint?: string } }>('/game/items/use', {
+        itemCode: level === 1 ? 'HINT_L1' : 'HINT_L2',
+        challengeId: challenge.id,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['challenges'] })
+      queryClient.invalidateQueries({ queryKey: ['game-state'] })
+      toast('HINT DECRYPTED', { description: 'Check the challenge card.' })
+    },
+    onError: (err) =>
+      toast('HINT DENIED', {
+        description: err instanceof ApiError ? err.message : 'FAILED TO USE HINT.',
+      }),
+  })
+
   return (
     <div
       className={cn(
@@ -143,6 +160,36 @@ function ChallengeCard({
         {challenge.resource_type === 'DOWNLOAD' ? <Download className="size-3.5" /> : challenge.resource_type === 'SERVICE' ? <Radio className="size-3.5" /> : <ExternalLink className="size-3.5" />}
         {challenge.resource_type === 'DOWNLOAD' ? 'Download artifact' : challenge.resource_type === 'SERVICE' ? 'Open service' : 'Open challenge'}
       </a>}
+
+      {/* Revealed hints */}
+      {challenge.hint1_text && (
+        <div className="mt-2 border-l-2 border-warn/50 bg-warn/5 py-2 pr-3 pl-3">
+          <div className="text-[10px] font-bold tracking-[0.12em] text-warn/70 uppercase">Hint 1</div>
+          <p className="mt-0.5 text-[11px] leading-snug text-term/75">{challenge.hint1_text}</p>
+        </div>
+      )}
+      {challenge.hint2_text && (
+        <div className="mt-2 border-l-2 border-item/50 bg-item/5 py-2 pr-3 pl-3">
+          <div className="text-[10px] font-bold tracking-[0.12em] text-item/70 uppercase">Hint 2</div>
+          <p className="mt-0.5 text-[11px] leading-snug text-term/75">{challenge.hint2_text}</p>
+        </div>
+      )}
+
+      {/* Hint buy buttons (CTF only, not solved, hint available but not yet revealed) */}
+      {!challenge.solved && challenge.category === 'CTF' && (challenge.has_hint1 || challenge.has_hint2) && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {challenge.has_hint1 && !challenge.hint1_revealed && (
+            <Button variant="warn" size="sm" disabled={useHint.isPending} onClick={() => useHint.mutate(1)}>
+              💡 Hint 1 (30 CIT$)
+            </Button>
+          )}
+          {challenge.has_hint2 && !challenge.hint2_revealed && (
+            <Button variant="item" size="sm" disabled={useHint.isPending} onClick={() => useHint.mutate(2)}>
+              💡 Hint 2 (75 CIT$)
+            </Button>
+          )}
+        </div>
+      )}
 
       {!challenge.solved && (
         <form

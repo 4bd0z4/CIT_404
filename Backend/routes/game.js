@@ -102,7 +102,29 @@ router.get('/challenges', async (req, res, next) => {
                     EXISTS (
                         SELECT 1 FROM submissions s
                          WHERE s.challenge_id = c.id AND s.is_first_blood
-                    ) AS first_blood_taken
+                    ) AS first_blood_taken,
+                    (c.hint1 IS NOT NULL) AS has_hint1,
+                    (c.hint2 IS NOT NULL) AS has_hint2,
+                    EXISTS (
+                        SELECT 1 FROM ledger l JOIN items i ON i.id = l.item_id
+                         WHERE l.team_id = $1 AND l.challenge_id = c.id
+                           AND l.kind = 'ITEM_USE' AND i.code = 'HINT_L1'
+                    ) AS hint1_revealed,
+                    EXISTS (
+                        SELECT 1 FROM ledger l JOIN items i ON i.id = l.item_id
+                         WHERE l.team_id = $1 AND l.challenge_id = c.id
+                           AND l.kind = 'ITEM_USE' AND i.code = 'HINT_L2'
+                    ) AS hint2_revealed,
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM ledger l JOIN items i ON i.id = l.item_id
+                         WHERE l.team_id = $1 AND l.challenge_id = c.id
+                           AND l.kind = 'ITEM_USE' AND i.code = 'HINT_L1'
+                    ) THEN c.hint1 END AS hint1_text,
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM ledger l JOIN items i ON i.id = l.item_id
+                         WHERE l.team_id = $1 AND l.challenge_id = c.id
+                           AND l.kind = 'ITEM_USE' AND i.code = 'HINT_L2'
+                    ) THEN c.hint2 END AS hint2_text
                FROM challenges c
               WHERE c.is_active
               ORDER BY c.category, c.difficulty, c.code`,
@@ -220,12 +242,13 @@ router.post('/items/purchase', async (req, res, next) => {
  */
 router.post('/items/use', async (req, res, next) => {
     try {
-        const { itemCode, missionCode } = req.body || {};
+        const { itemCode, missionCode, challengeId } = req.body || {};
         const result = await economy.useItem({
             teamId: req.auth.teamId,
             operatorId: req.auth.operatorId,
             itemCode,
             missionCode: missionCode || null,
+            challengeId: challengeId ? Number(challengeId) : null,
         });
         rt.broadcastInventory(req.auth.teamId, result.inventory);
         res.json({ success: true, ...result });

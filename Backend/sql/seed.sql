@@ -5,8 +5,8 @@
 -- =====================================================================
 
 INSERT INTO items (code, name, item_type, cost, icon, effect, payload, applies_to, is_consumable, max_per_team) VALUES
-('HINT_L1','Hint Level 1','HINT',30,'lightbulb','Reveals a small hint for the current mission or challenge.','{"level":1}','ANY',TRUE,NULL),
-('HINT_L2','Hint Level 2','HINT',75,'lightbulb','Reveals a more useful hint.','{"level":2}','ANY',TRUE,NULL),
+('HINT_L1','Hint Level 1','HINT',30,'lightbulb','Reveals a small hint for the challenge.','{}','ANY',TRUE,NULL),
+('HINT_L2','Hint Level 2','HINT',75,'lightbulb','Reveals a more detailed hint for the challenge.','{}','ANY',TRUE,NULL),
 ('INSURANCE','Mission Insurance','INSURANCE',100,'shield','On a failed mission, the team recovers 50% of the entry cost.','{"refund_ratio":0.5}','MISSION',TRUE,NULL);
 
 INSERT INTO missions (code, mission_name, kind, position, description, location_hint, coordinates, access_code) VALUES

@@ -178,7 +178,7 @@ async function purchaseItem({ teamId, operatorId, itemCode, quantity = 1 }) {
  * including which mission it was applied to, which is how insurance and
  * revealed coordinates are looked up later without extra tables.
  */
-async function useItem({ teamId, operatorId, itemCode, missionCode = null }) {
+async function useItem({ teamId, operatorId, itemCode, missionCode = null, challengeId: req_challengeId = null }) {
     return db.withTransaction(async (client) => {
         await lockTeam(client, teamId);
 
@@ -201,14 +201,32 @@ async function useItem({ teamId, operatorId, itemCode, missionCode = null }) {
         await consumeFromInventory(client, teamId, item.id, 1);
         await applyDelta(client, {
             teamId, operatorId, amount: 0, kind: 'ITEM_USE',
-            itemId: item.id, missionId: mission ? mission.id : null,
+            itemId: item.id,
+            missionId: mission ? mission.id : null,
+            challengeId: req_challengeId || null,
             note: mission ? `${item.name} -> ${mission.mission_name}` : item.name,
         });
 
-        // The coordinates item is the only one that hands back secret data.
         const revealed = {};
+
+        // Coordinates item reveals the mission's GPS.
         if (item.code === 'ACCESS_COORD' && mission) {
             revealed.coordinates = mission.coordinates;
+        }
+
+        // Hint items reveal per-challenge hint text.
+        // The frontend sends challengeId in the body; it arrives via missionCode
+        // (overloaded) or a new challengeCode param passed through the route.
+        const challengeId = req_challengeId;
+        if ((item.code === 'HINT_L1' || item.code === 'HINT_L2') && challengeId) {
+            const col = item.code === 'HINT_L1' ? 'hint1' : 'hint2';
+            const { rows: cRows } = await client.query(
+                `SELECT ${col} AS hint FROM challenges WHERE id = $1`, [challengeId]
+            );
+            const hint = cRows[0]?.hint;
+            if (!hint) throw new EconomyError('NO HINT AVAILABLE FOR THIS CHALLENGE.', 404);
+            revealed.hint = hint;
+            revealed.challengeId = challengeId;
         }
 
         return {
@@ -365,6 +383,17 @@ async function purchaseMission({ teamId, operatorId, missionCode, difficulty }) 
             [mission.id, difficulty]
         );
         const assignedTask = taskRows[0] || null;
+
+        // SPECIAL missions (Supply Run) can be repeated: clear any previous
+        // resolved row so the unique index allows a new purchase.
+        if (mission.kind === 'SPECIAL') {
+            await client.query(
+                `DELETE FROM team_missions
+                  WHERE team_id = $1 AND mission_id = $2
+                    AND status NOT IN ('PURCHASED')`,
+                [teamId, mission.id]
+            );
+        }
 
         let teamMission;
         try {

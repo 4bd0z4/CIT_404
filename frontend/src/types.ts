@@ -100,6 +100,12 @@ export interface Challenge {
   instructions: string | null
   solved: boolean
   first_blood_taken: boolean
+  has_hint1: boolean
+  has_hint2: boolean
+  hint1_revealed: boolean
+  hint2_revealed: boolean
+  hint1_text: string | null
+  hint2_text: string | null
 }
 
 export interface MissionTier {
