@@ -176,7 +176,7 @@ function ChallengeCard({
       )}
 
       {/* Hint buy buttons (CTF only, not solved, hint available but not yet revealed) */}
-      {!challenge.solved && challenge.category === 'CTF' && (challenge.has_hint1 || challenge.has_hint2) && (
+      {!challenge.solved && (challenge.has_hint1 || challenge.has_hint2) && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {challenge.has_hint1 && !challenge.hint1_revealed && (
             <Button variant="warn" size="sm" disabled={useHint.isPending} onClick={() => useHint.mutate(1)}>

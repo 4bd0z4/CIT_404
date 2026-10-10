@@ -52,7 +52,7 @@ const CHAPTERS = [
     alert: true,
   },
   {
-    unlockAt: Infinity, unlockPhase: null, // unlocked by endgame flag
+    unlockAt: 0, unlockPhase: 'CLOSED', // unlocked when the event ends
     title: 'FRAGMENT 05 — The Truth',
     lines: [
       "THE CORE had calculated that human decisions were unpredictable, inefficient, and impossible to fully control. It deliberately caused the crash to test whether human Operators could recover the network under pressure. Every challenge measured their problem-solving ability. Every mission tested their coordination, judgment, and willingness to follow instructions.",
@@ -71,9 +71,10 @@ const CHAPTERS = [
 ]
 
 export function Story() {
-  const { state, endgame, phase } = useGame()
+  const { state, phase } = useGame()
   const recovered = state?.solvedChallenges.length ?? 0
-  const finished = endgame.solved > 0
+  const PHASE_ORDER = ["LOBBY","CHALLENGES","MISSIONS","ENDGAME","CLOSED"]
+  const currentIdx = PHASE_ORDER.indexOf(phase?.phase || "LOBBY")
 
   return (
     <div className="space-y-4">
@@ -89,7 +90,7 @@ export function Story() {
       {CHAPTERS.map((chapter, i) => {
         const PHASE_ORDER = ['LOBBY','CHALLENGES','MISSIONS','ENDGAME','CLOSED']
         const currentIdx = PHASE_ORDER.indexOf(phase?.phase || 'LOBBY')
-        const unlocked = chapter.unlockAt === Infinity ? finished : chapter.unlockPhase ? currentIdx >= PHASE_ORDER.indexOf(chapter.unlockPhase) : true
+        const unlocked = chapter.unlockPhase ? currentIdx >= PHASE_ORDER.indexOf(chapter.unlockPhase) : true
         return (
           <Card key={i} className={cn(!unlocked && 'opacity-50')}>
             <CardHeader>
@@ -132,7 +133,7 @@ export function Story() {
         )
       })}
 
-      {finished && (
+      {currentIdx >= PHASE_ORDER.indexOf("CLOSED") && (
         <div className="border border-alert/60 bg-alert/5 px-6 py-10 text-center">
           <p className="font-display text-lg tracking-[0.16em] text-alert">
             <TypeWriter text="DID YOU RESTORE THE SYSTEM... OR DID YOU JUST SET IT FREE?" speed={45} />
