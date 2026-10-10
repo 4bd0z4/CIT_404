@@ -306,3 +306,70 @@ button, a, [role="button"] { }
   }
   .btn-live:hover:not(:disabled), .card-live:hover, .rank-row:hover { transform: none; }
 }
+
+/* =====================================================================
+   CIT: 404 — AMBIENT BACKDROP + PAGE TRANSITIONS
+   Adds depth and colour behind the phosphor grid, and a slide+fade+blur
+   page transition (adapted from the IBC CTF feel), terminal-green themed.
+   ===================================================================== */
+
+/* Drifting multi-hue glow behind everything (sits under the grid at z0). */
+body::before {
+  /* keep the existing phosphor grid, layer a colour wash beneath it */
+  background-image:
+    radial-gradient(55% 55% at 82% 12%, rgba(0, 255, 65, 0.10) 0%, transparent 60%),
+    radial-gradient(50% 50% at 12% 88%, rgba(0, 229, 255, 0.08) 0%, transparent 55%),
+    radial-gradient(45% 45% at 92% 92%, rgba(255, 79, 163, 0.06) 0%, transparent 60%),
+    radial-gradient(40% 40% at 20% 15%, rgba(255, 176, 0, 0.05) 0%, transparent 55%),
+    linear-gradient(rgba(0, 255, 65, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 65, 0.035) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 44px 44px, 44px 44px;
+  animation: cit-backdrop-drift 24s ease-in-out infinite alternate;
+}
+@keyframes cit-backdrop-drift {
+  from { background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0; transform: none; }
+  to   { background-position: 2% -2%, -2% 2%, -1% -1%, 1% 1%, 0 0, 0 0; }
+}
+
+/* Page transition: operator views slide up + fade + unblur on mount. */
+@keyframes cit-page-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.992); filter: blur(5px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+.page-transition { animation: cit-page-in 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none; }
+  .page-transition { animation: none; }
+}
+
+/* =====================================================================
+   Operator nav tabs — angular, alive, clear active state
+   ===================================================================== */
+.nav-tab {
+  position: relative;
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+.nav-tab::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: 0;
+  height: 2px;
+  background: var(--color-term);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 180ms ease;
+  box-shadow: 0 0 8px var(--color-term);
+}
+.nav-tab:hover::after { transform: scaleX(0.6); }
+.nav-tab[aria-current='page']::after { transform: scaleX(1); }
+.nav-tab[aria-current='page'] {
+  background: color-mix(in srgb, var(--color-term) 12%, transparent);
+  color: var(--color-term);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-tab, .nav-tab::after { transition: none; }
+}

@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { Backpack, Bell, Lock, LogOut, Users, Zap } from 'lucide-react'
 import { useAuth } from '@/store/auth-context'
@@ -39,6 +39,7 @@ const PHASE_LABEL: Record<Phase, string> = {
 
 export function OperatorLayout() {
   const { team, logout } = useAuth()
+  const location = useLocation()
   const { wallet, inventory, state, endgame, phase, unreadCount, onlineOperators } = useGame()
   const [openPanel, setOpenPanel] = useState<'team' | 'inventory' | 'alerts' | null>(null)
 
@@ -131,24 +132,29 @@ export function OperatorLayout() {
                 end={tab.end}
                 className={({ isActive }) =>
                   cn(
-                    'flex flex-1 shrink-0 items-center justify-center gap-1 border-r border-edge px-3 py-2.5 text-[10px] font-bold tracking-[0.12em] whitespace-nowrap uppercase transition-colors last:border-r-0 sm:text-[11px]',
+                    'nav-tab flex flex-1 shrink-0 items-center justify-center gap-1 border-r border-edge px-3 py-2.5 text-[10px] font-bold tracking-[0.12em] whitespace-nowrap uppercase last:border-r-0 sm:text-[11px]',
                     isActive
-                      ? 'bg-term/10 text-term text-glow shadow-[inset_0_-2px_0_0_var(--color-term)]'
+                      ? 'text-term text-glow'
                       : locked
                         ? 'text-term/20 hover:text-term/40'
-                        : 'text-term/45 hover:bg-term/5 hover:text-term/80'
+                        : 'text-term/45 hover:text-term/80'
                   )
                 }
               >
-                {locked && <Lock className="size-3" />}
-                {tab.label}
+                {({ isActive }) => (
+                  <span className="flex items-center gap-1">
+                    {locked && <Lock className="size-3" />}
+                    {tab.label}
+                    {isActive && null}
+                  </span>
+                )}
               </NavLink>
             )
           })}
         </nav>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-3 py-5 sm:px-4 sm:py-6">
+      <main key={location.pathname} className="page-transition mx-auto w-full max-w-6xl flex-1 px-3 py-5 sm:px-4 sm:py-6">
         <Outlet />
       </main>
 
@@ -203,13 +209,12 @@ export function OperatorLayout() {
             </div>
 
             <div className="space-y-3">
-              <StatMeter label="CP Challenges" value={count('CP')} max={4} />
-              <StatMeter label="CTF Challenges" value={count('CTF')} max={4} tone="info" />
-              <StatMeter label="Data Fragments" value={count('DATA')} max={4} tone="warn" />
+              <StatMeter label="CP Solved" value={count('CP')} max={7} />
+              <StatMeter label="CTF Solved" value={count('CTF')} max={15} tone="info" />
               <StatMeter
                 label="Missions Deployed"
                 value={state?.missions.length ?? 0}
-                max={6}
+                max={4}
                 tone="item"
               />
             </div>
