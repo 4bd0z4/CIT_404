@@ -10,12 +10,11 @@ import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/fx'
 import type { AdminOverview } from '@/types'
 
-const SERIES = {
+const SERIES: Record<string, string> = {
   earned: '#22e1ff',
-  spent: '#ff003c',
+  spent: '#ff3355',
   CP: '#22e1ff',
-  CTF: '#00e5ff',
-  DATA: '#ffb000',
+  CTF: '#a78bfa',
 }
 
 const axis = { stroke: '#232a44', tick: { fill: '#12a8c4', fontSize: 10 } }

@@ -126,7 +126,6 @@ export function Teams() {
                       <div className="flex gap-1">
                         <Badge variant="default">CP {t.solved_cp}</Badge>
                         <Badge variant="info">CTF {t.solved_ctf}</Badge>
-                        <Badge variant="warn">DATA {t.solved_data}</Badge>
                       </div>
                     </Td>
                     <Td className="text-right text-term/30">{timeAgo(t.last_activity_at)}</Td>
