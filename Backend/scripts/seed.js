@@ -134,6 +134,19 @@ async function main() {
     ));
 
     // --- Field codes -------------------------------------------------
+    // seed.sql ships well-known default codes, and this repository is public:
+    // anyone could unlock every mission without going on site. Replace any
+    // code that is still a default with a random one. Codes that were already
+    // changed are left alone, so re-running the seed does not rotate them.
+    const PUBLIC_DEFAULT_CODES = ['SUPPLY01', 'GREEN01', 'TOWER02', 'FORT03', 'PORT04'];
+    const { rows: stale } = await db.query(
+        'SELECT id FROM missions WHERE access_code = ANY($1::text[])', [PUBLIC_DEFAULT_CODES]
+    );
+    for (const m of stale) {
+        await db.query('UPDATE missions SET access_code = $2 WHERE id = $1', [m.id, joinCode().slice(0, 6)]);
+    }
+    if (stale.length) console.log(`\n(${stale.length} public default field code(s) replaced with random ones)`);
+
     const { rows: missionCodes } = await db.query(
         'SELECT mission_name, access_code, location_hint FROM missions ORDER BY position, id'
     );
