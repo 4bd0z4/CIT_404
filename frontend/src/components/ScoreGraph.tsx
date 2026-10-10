@@ -12,23 +12,29 @@ interface TeamSeries {
   points: { t: number; score: number }[]
 }
 
-// Vivid, high-contrast lines — leader is lime, then cyan/magenta/amber/etc.
+// Vivid, high-contrast lines — leader is electric cyan, then magenta/amber/violet.
 const LINE_COLORS = [
-  '#39ff14', '#00e5ff', '#ff4fa3', '#ffb000', '#a855f7',
-  '#2dd4bf', '#fb7185', '#818cf8', '#f472b6', '#facc15',
+  '#22e1ff', '#ff4fa3', '#ffb020', '#a78bfa', '#4ade80',
+  '#fb7185', '#38bdf8', '#f472b6', '#facc15', '#2dd4bf',
 ]
 
 const W = 900
 const H = 200
 const PAD = { top: 14, right: 14, bottom: 22, left: 46 }
 
-export function ScoreGraph() {
+export function ScoreGraph({
+  endpoint = '/game/score-history',
+  height = 200,
+}: {
+  endpoint?: string
+  height?: number
+}) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [hover, setHover] = useState<number | null>(null)
 
   const { data: series } = useQuery({
-    queryKey: ['score-history'],
-    queryFn: () => apiGet<TeamSeries[]>('/game/score-history'),
+    queryKey: ['score-history', endpoint],
+    queryFn: () => apiGet<TeamSeries[]>(endpoint),
     refetchInterval: 20_000,
   })
 
@@ -77,7 +83,7 @@ export function ScoreGraph() {
   if (!model) return <div className="score-graph-empty">THE GRAPH APPEARS ONCE TEAMS GAIN ENERGY.</div>
 
   return (
-    <div className="score-graph">
+    <div className="score-graph" style={{ ["--sg-h" as string]: `${height}px` }}>
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
@@ -95,9 +101,9 @@ export function ScoreGraph() {
         {model.yTicks.map((tick, i) => (
           <g key={i}>
             <line x1={PAD.left} y1={tick.yv} x2={W - PAD.right} y2={tick.yv}
-              stroke="rgba(0,255,65,0.07)" strokeWidth="1" />
+              stroke="rgba(34, 225, 255,0.07)" strokeWidth="1" />
             <text x={PAD.left - 8} y={tick.yv + 3} textAnchor="end" fontSize="9"
-              fontFamily="monospace" fill="rgba(0,255,65,0.4)">{tick.label}</text>
+              fontFamily="monospace" fill="rgba(34, 225, 255,0.4)">{tick.label}</text>
           </g>
         ))}
 

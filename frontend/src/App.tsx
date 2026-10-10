@@ -13,6 +13,8 @@ import { Missions } from '@/pages/Missions'
 import { Endgame } from '@/pages/Endgame'
 import { Market } from '@/pages/Market'
 import { Story } from '@/pages/Story'
+import { Scoreboard } from '@/pages/Scoreboard'
+import { NetworkBackground } from '@/components/NetworkBackground'
 
 /**
  * The admin platform pulls in Recharts and the big data tables. Operators
@@ -40,7 +42,11 @@ export function App() {
 
   return (
     <Suspense fallback={<BootScreen message="LOADING MODULE" />}>
+      <NetworkBackground />
       <Routes>
+        {/* Public projector view for the venue screen. */}
+        <Route path="/scoreboard" element={<Scoreboard />} />
+
         {/* ---------------- OPERATOR ---------------- */}
       <Route
         path="/"

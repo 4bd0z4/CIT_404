@@ -11,23 +11,23 @@ import { EmptyState } from '@/components/fx'
 import type { AdminOverview } from '@/types'
 
 const SERIES = {
-  earned: '#00ff41',
+  earned: '#22e1ff',
   spent: '#ff003c',
-  CP: '#00ff41',
+  CP: '#22e1ff',
   CTF: '#00e5ff',
   DATA: '#ffb000',
 }
 
-const axis = { stroke: '#2a2a2a', tick: { fill: '#00b32d', fontSize: 10 } }
+const axis = { stroke: '#232a44', tick: { fill: '#12a8c4', fontSize: 10 } }
 
 const tooltipStyle = {
   contentStyle: {
     background: '#0b0e0b',
-    border: '1px solid #2a2a2a',
+    border: '1px solid #232a44',
     fontFamily: 'JetBrains Mono, monospace',
     fontSize: 11,
   },
-  labelStyle: { color: '#00ff41' },
+  labelStyle: { color: '#22e1ff' },
 }
 
 export function Dashboard() {
@@ -70,7 +70,7 @@ export function Dashboard() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={timeline} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                  <CartesianGrid stroke="#1b2a1b" strokeDasharray="2 4" />
+                  <CartesianGrid stroke="#1a2140" strokeDasharray="2 4" />
                   <XAxis dataKey="t" {...axis} />
                   <YAxis {...axis} />
                   <Tooltip {...tooltipStyle} />
@@ -93,10 +93,10 @@ export function Dashboard() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.byCategory} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                  <CartesianGrid stroke="#1b2a1b" strokeDasharray="2 4" vertical={false} />
+                  <CartesianGrid stroke="#1a2140" strokeDasharray="2 4" vertical={false} />
                   <XAxis dataKey="category" {...axis} />
                   <YAxis {...axis} />
-                  <Tooltip {...tooltipStyle} cursor={{ fill: 'rgba(0,255,65,0.06)' }} />
+                  <Tooltip {...tooltipStyle} cursor={{ fill: 'rgba(34, 225, 255,0.06)' }} />
                   <Bar dataKey="solves" name="Solves">
                     {data.byCategory.map((row) => (
                       <Cell key={row.category} fill={SERIES[row.category]} />
@@ -124,7 +124,7 @@ export function Dashboard() {
                 layout="vertical"
                 margin={{ top: 4, right: 16, left: 40, bottom: 0 }}
               >
-                <CartesianGrid stroke="#1b2a1b" strokeDasharray="2 4" horizontal={false} />
+                <CartesianGrid stroke="#1a2140" strokeDasharray="2 4" horizontal={false} />
                 <XAxis type="number" {...axis} />
                 <YAxis type="category" dataKey="name" width={120} {...axis} />
                 <Tooltip {...tooltipStyle} cursor={{ fill: 'rgba(255,79,163,0.08)' }} />

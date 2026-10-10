@@ -13,6 +13,7 @@ const db = require('./db_config');
 const { attachAuth, socketAuth, requireTeam } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/game');
+const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
 const dcrRoutes = require('./routes/dcr');
 const dcrQueryRoutes = require('./routes/dcrQuery');
@@ -71,6 +72,7 @@ io.on('connection', (socket) => {
 app.get('/api/health', (_req, res) => res.json({ status: 'THE CORE IS LISTENING', uptime: process.uptime() }));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/public', publicRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/dcr', requireTeam, phase.requirePhase('CHALLENGES'), dcrRoutes);
 app.use('/api/data', requireTeam, phase.requirePhase('CHALLENGES'), dcrQueryRoutes);

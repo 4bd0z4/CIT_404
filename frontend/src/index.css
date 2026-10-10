@@ -7,19 +7,19 @@
    informational series, magenta for items).
    ===================================================================== */
 @theme {
-  --color-void: #050505;
-  --color-panel: #0b0e0b;
-  --color-panel-2: #101410;
-  --color-grid: #1b2a1b;
-  --color-edge: #2a2a2a;
+  --color-void: #05060d;
+  --color-panel: #0a0d18;
+  --color-panel-2: #0f1322;
+  --color-grid: #1a2140;
+  --color-edge: #232a44;
 
-  --color-term: #00ff41;
-  --color-term-dim: #00b32d;
-  --color-term-faint: #0a3d17;
+  --color-term: #22e1ff;
+  --color-term-dim: #12a8c4;
+  --color-term-faint: #0b3a4a;
 
-  --color-alert: #ff003c;
-  --color-warn: #ffb000;
-  --color-info: #00e5ff;
+  --color-alert: #ff3355;
+  --color-warn: #ffb020;
+  --color-info: #a78bfa;
   --color-item: #ff4fa3;
 
   --font-mono: 'JetBrains Mono', 'Courier New', Courier, monospace;
@@ -190,7 +190,7 @@ button, a, [role="button"] { }
   position: absolute;
   inset: 0;
   background: linear-gradient(100deg, transparent 20%,
-    rgba(0, 255, 65, 0.18) 45%, rgba(0, 255, 65, 0.0) 60%);
+    rgba(34, 225, 255, 0.18) 45%, rgba(34, 225, 255, 0.0) 60%);
   transform: translateX(-120%);
   transition: transform 0.6s ease;
   pointer-events: none;
@@ -205,7 +205,7 @@ button, a, [role="button"] { }
   align-items: center;
   gap: 0.75rem;
   padding: 0.6rem 0.9rem;
-  --row-base: rgba(0, 255, 65, 0.03);
+  --row-base: rgba(34, 225, 255, 0.03);
   --row-grad: transparent;
   transition: transform 180ms ease-out, box-shadow 180ms ease-out;
 }
@@ -230,7 +230,7 @@ button, a, [role="button"] { }
 .rank-row:hover { transform: translateX(2px); }
 .rank-row[data-variant='gold']   { --row-base: rgba(255, 176, 0, 0.08);  --row-grad: rgba(255, 176, 0, 0.20); }
 .rank-row[data-variant='silver'] { --row-base: rgba(180, 220, 190, 0.07); --row-grad: rgba(180, 220, 190, 0.16); }
-.rank-row[data-variant='bronze'] { --row-base: rgba(0, 229, 255, 0.07);  --row-grad: rgba(0, 229, 255, 0.16); }
+.rank-row[data-variant='bronze'] { --row-base: rgba(255, 140, 80, 0.07);  --row-grad: rgba(255, 140, 80, 0.16); }
 .rank-row[data-mine] {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-term) 55%, transparent),
               0 0 22px -8px var(--color-term);
@@ -258,7 +258,7 @@ button, a, [role="button"] { }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.rank-bar { height: 4px; background: rgba(0, 255, 65, 0.08); overflow: hidden; }
+.rank-bar { height: 4px; background: rgba(34, 225, 255, 0.08); overflow: hidden; }
 .rank-bar > span {
   display: block;
   height: 100%;
@@ -310,27 +310,23 @@ button, a, [role="button"] { }
    page transition (adapted from the IBC CTF feel), terminal-green themed.
    ===================================================================== */
 
-/* Vivid drifting multi-hue glow — no grid, richer colour, more alive. */
+/* Static depth behind the animated network canvas: a deep indigo gradient
+   with soft cyan/violet pools. The motion comes from NetworkBackground. */
 body::before {
   background-image:
-    radial-gradient(50% 50% at 80% 10%, rgba(57, 255, 20, 0.20) 0%, transparent 58%),
-    radial-gradient(48% 48% at 12% 85%, rgba(0, 229, 255, 0.18) 0%, transparent 55%),
-    radial-gradient(46% 46% at 92% 88%, rgba(255, 79, 163, 0.16) 0%, transparent 58%),
-    radial-gradient(42% 42% at 18% 14%, rgba(168, 85, 247, 0.14) 0%, transparent 55%),
-    radial-gradient(38% 38% at 55% 55%, rgba(255, 176, 0, 0.08) 0%, transparent 60%),
-    linear-gradient(160deg, #080b12 0%, var(--color-void) 60%);
+    radial-gradient(60% 55% at 85% 0%, rgba(124, 92, 255, 0.22) 0%, transparent 60%),
+    radial-gradient(55% 55% at 0% 100%, rgba(34, 225, 255, 0.16) 0%, transparent 58%),
+    radial-gradient(40% 40% at 100% 100%, rgba(255, 79, 163, 0.10) 0%, transparent 60%),
+    linear-gradient(170deg, #070a18 0%, var(--color-void) 70%);
   background-repeat: no-repeat;
   background-size: 100% 100%;
-  animation: cit-backdrop-drift 20s ease-in-out infinite alternate;
 }
-@keyframes cit-backdrop-drift {
-  from { transform: scale(1) translate(0, 0); opacity: 0.9; }
-  to   { transform: scale(1.08) translate(-1.5%, -1.5%); opacity: 1; }
-}
-
-/* A second, faster-moving accent layer for liveliness. */
-body::after {
-  /* keep the CRT scanlines (defined earlier) AND add a slow colour sweep */
+.network-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.85;
 }
 
 /* Page transition: operator views slide up + fade + unblur on mount. */
@@ -384,7 +380,7 @@ body::after {
   background: rgba(0, 0, 0, 0.4);
   padding: 0.75rem 0.75rem 0.5rem;
 }
-.score-graph svg { width: 100%; height: 200px; display: block; }
+.score-graph svg { width: 100%; height: var(--sg-h, 200px); display: block; }
 .score-graph-empty {
   border: 1px dashed var(--color-edge);
   background: rgba(0, 0, 0, 0.4);
@@ -402,7 +398,7 @@ body::after {
   gap: 0.4rem 1rem;
   margin-top: 0.6rem;
   padding-top: 0.6rem;
-  border-top: 1px solid rgba(0, 255, 65, 0.08);
+  border-top: 1px solid rgba(34, 225, 255, 0.08);
 }
 .sg-legend-item {
   display: inline-flex;

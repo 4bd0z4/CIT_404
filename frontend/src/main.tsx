@@ -28,8 +28,8 @@ createRoot(document.getElementById('root')!).render(
             toastOptions={{
               style: {
                 background: '#0b0e0b',
-                border: '1px solid #2a2a2a',
-                color: '#00ff41',
+                border: '1px solid #232a44',
+                color: '#22e1ff',
                 fontFamily: 'JetBrains Mono, monospace',
                 fontSize: '11px',
                 borderRadius: 0,
