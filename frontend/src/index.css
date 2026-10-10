@@ -79,10 +79,7 @@ body::before {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image:
-    linear-gradient(rgba(0, 255, 65, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 65, 0.035) 1px, transparent 1px);
-  background-size: 44px 44px;
+  background-image: none;
 }
 
 /* CRT scanlines. Disabled for anyone who asked for reduced motion. */
@@ -313,22 +310,27 @@ button, a, [role="button"] { }
    page transition (adapted from the IBC CTF feel), terminal-green themed.
    ===================================================================== */
 
-/* Drifting multi-hue glow behind everything (sits under the grid at z0). */
+/* Vivid drifting multi-hue glow — no grid, richer colour, more alive. */
 body::before {
-  /* keep the existing phosphor grid, layer a colour wash beneath it */
   background-image:
-    radial-gradient(55% 55% at 82% 12%, rgba(0, 255, 65, 0.10) 0%, transparent 60%),
-    radial-gradient(50% 50% at 12% 88%, rgba(0, 229, 255, 0.08) 0%, transparent 55%),
-    radial-gradient(45% 45% at 92% 92%, rgba(255, 79, 163, 0.06) 0%, transparent 60%),
-    radial-gradient(40% 40% at 20% 15%, rgba(255, 176, 0, 0.05) 0%, transparent 55%),
-    linear-gradient(rgba(0, 255, 65, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 65, 0.035) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 44px 44px, 44px 44px;
-  animation: cit-backdrop-drift 24s ease-in-out infinite alternate;
+    radial-gradient(50% 50% at 80% 10%, rgba(57, 255, 20, 0.20) 0%, transparent 58%),
+    radial-gradient(48% 48% at 12% 85%, rgba(0, 229, 255, 0.18) 0%, transparent 55%),
+    radial-gradient(46% 46% at 92% 88%, rgba(255, 79, 163, 0.16) 0%, transparent 58%),
+    radial-gradient(42% 42% at 18% 14%, rgba(168, 85, 247, 0.14) 0%, transparent 55%),
+    radial-gradient(38% 38% at 55% 55%, rgba(255, 176, 0, 0.08) 0%, transparent 60%),
+    linear-gradient(160deg, #080b12 0%, var(--color-void) 60%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  animation: cit-backdrop-drift 20s ease-in-out infinite alternate;
 }
 @keyframes cit-backdrop-drift {
-  from { background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0; transform: none; }
-  to   { background-position: 2% -2%, -2% 2%, -1% -1%, 1% 1%, 0 0, 0 0; }
+  from { transform: scale(1) translate(0, 0); opacity: 0.9; }
+  to   { transform: scale(1.08) translate(-1.5%, -1.5%); opacity: 1; }
+}
+
+/* A second, faster-moving accent layer for liveliness. */
+body::after {
+  /* keep the CRT scanlines (defined earlier) AND add a slow colour sweep */
 }
 
 /* Page transition: operator views slide up + fade + unblur on mount. */
@@ -373,3 +375,43 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .nav-tab, .nav-tab::after { transition: none; }
 }
+
+/* =====================================================================
+   Score progression graph
+   ===================================================================== */
+.score-graph {
+  border: 1px solid var(--color-edge);
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.75rem 0.75rem 0.5rem;
+}
+.score-graph svg { width: 100%; height: 200px; display: block; }
+.score-graph-empty {
+  border: 1px dashed var(--color-edge);
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2rem 1rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-term) 35%, transparent);
+}
+.score-graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(0, 255, 65, 0.08);
+}
+.sg-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--color-term) 70%, white 10%);
+}
+.sg-swatch { flex: none; width: 0.7rem; height: 0.7rem; border-radius: 2px; }
+.sg-legend-name { white-space: nowrap; max-width: 7rem; overflow: hidden; text-overflow: ellipsis; }
+.sg-legend-val { color: var(--color-info); font-variant-numeric: tabular-nums; }

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState, GlitchTitle, TerminalBlock } from '@/components/fx'
 import { NotificationsCard } from '@/components/Notifications'
+import { ScoreGraph } from '@/components/ScoreGraph'
 import type { LeaderboardRow } from '@/types'
 
 interface FeedRow {
@@ -116,6 +117,9 @@ export function Home() {
             <CardTitle>Recovery Standings</CardTitle>
             <Crown className="size-4 text-warn" />
           </CardHeader>
+          <div className="border-b border-edge px-3 pt-3">
+            <ScoreGraph />
+          </div>
           <CardContent className="space-y-1.5 p-3">
             {!board?.length ? (
               <EmptyState>STANDINGS NOT YET CALCULATED.</EmptyState>

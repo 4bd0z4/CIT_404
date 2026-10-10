@@ -488,4 +488,37 @@ router.get('/feed', async (_req, res, next) => {
     } catch (err) { next(err); }
 });
 
+/**
+ * GET /api/game/score-history
+ * Per-team Core Energy progression over time for the top teams, built from
+ * the ledger (energy_after is a stored running total). Powers the live score
+ * graph. One point per energy-changing ledger row.
+ */
+router.get('/score-history', async (_req, res, next) => {
+    try {
+        const { rows } = await db.query(
+            `WITH top AS (
+                 SELECT id, team_name, core_energy
+                   FROM v_leaderboard JOIN teams USING (team_name)
+                  ORDER BY rank LIMIT 10
+             )
+             SELECT top.team_name,
+                    l.created_at AS t,
+                    l.energy_after AS score
+               FROM top
+               JOIN ledger l ON l.team_id = top.id
+              WHERE l.energy_delta <> 0
+              ORDER BY top.team_name, l.created_at`
+        );
+        // Group into per-team series.
+        const byTeam = new Map();
+        for (const r of rows) {
+            if (!byTeam.has(r.team_name)) byTeam.set(r.team_name, []);
+            byTeam.get(r.team_name).push({ t: new Date(r.t).getTime(), score: r.score });
+        }
+        const series = [...byTeam.entries()].map(([name, points]) => ({ name, points }));
+        res.json(series);
+    } catch (err) { next(err); }
+});
+
 module.exports = router;
