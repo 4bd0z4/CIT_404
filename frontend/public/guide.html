@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CIT: 404 — Operator Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Share+Tech+Mono&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #05060d;
+    color: #b8c4d8;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Ambient background matching the platform */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(60% 55% at 85% 0%, rgba(124, 92, 255, 0.18) 0%, transparent 60%),
+      radial-gradient(55% 55% at 0% 100%, rgba(34, 225, 255, 0.14) 0%, transparent 58%),
+      radial-gradient(40% 40% at 100% 100%, rgba(255, 79, 163, 0.08) 0%, transparent 60%),
+      linear-gradient(170deg, #070a18 0%, #05060d 70%);
+  }
+
+  /* CRT scanlines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,0.2) 2px 4px);
+    opacity: 0.25;
+  }
+
+  .container {
+    position: relative;
+    z-index: 10;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  h1 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 2.4rem;
+    letter-spacing: 0.22em;
+    color: #22e1ff;
+    text-shadow: 0 0 30px rgba(34,225,255,0.4);
+    text-align: center;
+    margin-bottom: 0.3rem;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(34,225,255,0.45);
+    margin-bottom: 3rem;
+  }
+
+  h2 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #22e1ff;
+    border-bottom: 1px solid rgba(34,225,255,0.2);
+    padding-bottom: 0.5rem;
+    margin: 2.5rem 0 1rem;
+  }
+
+  h2 .phase-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    margin-left: 0.8rem;
+    border: 1px solid rgba(167,139,250,0.5);
+    color: #a78bfa;
+    vertical-align: middle;
+    letter-spacing: 0.1em;
+  }
+
+  h3 {
+    font-size: 0.85rem;
+    color: #a78bfa;
+    margin: 1.5rem 0 0.5rem;
+    letter-spacing: 0.1em;
+  }
+
+  p, li { color: #8a95aa; }
+
+  ul {
+    padding-left: 1.2rem;
+    margin: 0.5rem 0;
+  }
+  li { margin: 0.35rem 0; }
+
+  .highlight {
+    color: #22e1ff;
+    font-weight: 700;
+  }
+
+  .warn { color: #ffb020; }
+  .pink { color: #ff4fa3; }
+  .green { color: #4ade80; }
+
+  .card {
+    border: 1px solid rgba(34,225,255,0.15);
+    background: rgba(10,13,24,0.7);
+    padding: 1rem 1.2rem;
+    margin: 1rem 0;
+  }
+
+  .card-title {
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(34,225,255,0.5);
+    margin-bottom: 0.5rem;
+  }
+
+  .step {
+    display: flex;
+    gap: 0.8rem;
+    margin: 0.7rem 0;
+  }
+
+  .step-num {
+    flex: none;
+    width: 1.6rem;
+    height: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(34,225,255,0.3);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: #22e1ff;
+  }
+
+  .step-text { flex: 1; }
+
+  .terminal {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(34,225,255,0.12);
+    padding: 0.8rem 1rem;
+    margin: 0.8rem 0;
+    font-size: 0.78rem;
+    color: #22e1ff;
+    white-space: pre-wrap;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(34,225,255,0.1);
+    margin: 2rem 0;
+  }
+
+  .footer {
+    text-align: center;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(34,225,255,0.25);
+    margin-top: 3rem;
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 1.5rem 1rem 3rem; }
+    h1 { font-size: 1.8rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>CIT: 404</h1>
+<p class="subtitle">Recovery Protocol — Operator Guide</p>
+
+<!-- ============================================================ -->
+<h2>Getting Started</h2>
+
+<div class="step">
+  <span class="step-num">1</span>
+  <div class="step-text">Open the platform on your phone or laptop. You'll see the login screen.</div>
+</div>
+<div class="step">
+  <span class="step-num">2</span>
+  <div class="step-text">Select your <span class="highlight">team</span> from the dropdown, enter your <span class="highlight">team access code</span> (given by the organiser), and choose a <span class="highlight">callsign</span> (your operator name).</div>
+</div>
+<div class="step">
+  <span class="step-num">3</span>
+  <div class="step-text">Each team has <span class="highlight">3 operator slots</span>. All 3 operators share the same wallet, inventory, and progress.</div>
+</div>
+
+<div class="card">
+  <div class="card-title">Your starting resources</div>
+  <p><span class="highlight">150 CIT$</span> — the only currency in the recovery system.</p>
+  <p><span class="highlight">0 Core Energy (NRG)</span> — this is your real score. The team with the most energy wins.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>Phase I — Challenges <span class="phase-tag">Digital Arena</span></h2>
+
+<p>Three types of challenges are available:</p>
+
+<h3>Competitive Programming (CP)</h3>
+<ul>
+  <li>Solve problems on <span class="highlight">HackerRank</span> (link on each challenge card).</li>
+  <li>When all hidden tests pass, HackerRank gives you a <span class="highlight">completion key</span>.</li>
+  <li>Come back to CIT:404 and submit the key in the <span class="highlight">CIT{...}</span> format.</li>
+</ul>
+
+<h3>Capture the Flag (CTF)</h3>
+<ul>
+  <li>Crypto, OSINT, Misc, Steganography, and Web challenges.</li>
+  <li>Some have <span class="highlight">downloadable files</span> or <span class="highlight">external links</span> — look for the button on the card.</li>
+  <li>Find the flag and submit it in <span class="highlight">CIT{...}</span> format.</li>
+</ul>
+
+<h3>Data Core Retrieval (DCR)</h3>
+<ul>
+  <li>15 SQL investigation missions across 4 difficulty levels.</li>
+  <li>You get access to a <span class="highlight">read-only database</span> with a built-in SQL console.</li>
+  <li>Read the briefing, query the data, and type your answer.</li>
+  <li>Some missions are <span class="highlight">locked</span> until you solve their prerequisite.</li>
+</ul>
+
+<div class="card">
+  <div class="card-title">Hints</div>
+  <p>Stuck? You can buy <span class="warn">Hint Level 1 (30 CIT$)</span> or <span class="warn">Hint Level 2 (75 CIT$)</span> from the <span class="highlight">Market</span>, then use them on a challenge. The hint text appears on the card. Not every challenge has hints.</p>
+</div>
+
+<div class="card">
+  <div class="card-title">First Blood</div>
+  <p>The <span class="warn">first team</span> to solve a challenge gets a <span class="highlight">bonus reward</span> — extra CIT$ and energy on top of the normal payout.</p>
+</div>
+
+<div class="terminal">&gt; CIT$ is not just a score.
+&gt; CIT$ is your power during the next phase.</div>
+
+<!-- ============================================================ -->
+<h2>Phase II — Missions <span class="phase-tag">Field Operations</span></h2>
+
+<p>You will be sent to <span class="highlight">real locations across Rabat</span> to complete field missions.</p>
+
+<div class="step">
+  <span class="step-num">1</span>
+  <div class="step-text">Read the <span class="highlight">location hint</span> on the mission card. Figure out where to go.</div>
+</div>
+<div class="step">
+  <span class="step-num">2</span>
+  <div class="step-text">When you arrive, find an <span class="highlight">admin on site</span>. They will give you the <span class="highlight">access code</span>.</div>
+</div>
+<div class="step">
+  <span class="step-num">3</span>
+  <div class="step-text">Enter the access code on the platform. The <span class="highlight">real location name</span> appears once you unlock.</div>
+</div>
+<div class="step">
+  <span class="step-num">4</span>
+  <div class="step-text">Choose a <span class="highlight">difficulty</span> (Easy / Medium / Hard). Higher difficulty = higher cost, higher reward, less time.</div>
+</div>
+<div class="step">
+  <span class="step-num">5</span>
+  <div class="step-text">The platform assigns you a <span class="highlight">random task</span>. Complete it and show the proof to the admin.</div>
+</div>
+<div class="step">
+  <span class="step-num">6</span>
+  <div class="step-text">The admin <span class="green">validates</span> or <span class="pink">fails</span> your mission. Payout is automatic.</div>
+</div>
+
+<div class="card">
+  <div class="card-title">Supply Run</div>
+  <p>Out of CIT$? The <span class="highlight">Supply Run</span> is a free, repeatable mission. Complete it to earn <span class="highlight">200 CIT$</span> — enough to get back in the game.</p>
+</div>
+
+<div class="card">
+  <div class="card-title">Mission items (from the Market)</div>
+  <ul>
+    <li><span class="highlight">Insurance (100 CIT$)</span> — if you fail, recover 50% of the entry cost.</li>
+    <li><span class="highlight">Location Scan (80 CIT$)</span> — reveals GPS coordinates for a mission.</li>
+    <li><span class="highlight">Mission Resign (50 CIT$)</span> — abandon an active mission to free the slot.</li>
+    <li><span class="highlight">Mission Reroll (40 CIT$)</span> — redo a completed/failed mission.</li>
+    <li><span class="highlight">Time Boost (60 CIT$)</span> — +10 minutes on your timer.</li>
+    <li><span class="highlight">Double Reward (120 CIT$)</span> — doubles CIT$ and energy on completion.</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>Phase III — Endgame <span class="phase-tag">Recovery Protocol</span></h2>
+
+<p>Throughout the event, you will collect <span class="highlight">physical fragments</span> scattered around INPT.</p>
+<p>When the Endgame phase opens, assemble all the fragments into a single flag and submit it on the platform.</p>
+
+<div class="terminal">&gt; One flag. One input. One chance to finish the recovery.</div>
+
+<!-- ============================================================ -->
+<h2>The Story</h2>
+
+<p>As the event progresses, <span class="highlight">story fragments</span> unlock in the <span class="highlight">Story</span> tab. Each phase reveals a new piece of the narrative. Pay attention — the story may not be what it seems.</p>
+
+<!-- ============================================================ -->
+<h2>Scoring</h2>
+
+<div class="card">
+  <div class="card-title">What matters</div>
+  <p><span class="highlight">Core Energy (NRG)</span> is your score. The team with the most energy at the end wins.</p>
+  <p><span class="warn">CIT$</span> is your currency — spend it on missions, items, and hints. It is NOT the score.</p>
+</div>
+
+<div class="card">
+  <div class="card-title">How you earn</div>
+  <ul>
+    <li>Solve challenges → CIT$ + NRG</li>
+    <li>First blood bonus → extra CIT$ + NRG</li>
+    <li>Complete missions → CIT$ + NRG</li>
+    <li>DCR missions → CIT$ + NRG</li>
+    <li>Submit the final flag → CIT$ + NRG</li>
+  </ul>
+</div>
+
+<hr class="divider" />
+
+<h2>Quick Tips</h2>
+<ul>
+  <li>All 3 operators share one wallet — <span class="warn">coordinate your spending</span>.</li>
+  <li>Flags are always in <span class="highlight">CIT{...}</span> format (case-insensitive).</li>
+  <li>The <span class="highlight">/scoreboard</span> page shows live standings on the venue screen.</li>
+  <li>Keep your browser tab open — you'll get <span class="highlight">live notifications</span> from THE CORE.</li>
+  <li>If you run out of money, do the <span class="highlight">Supply Run</span>.</li>
+</ul>
+
+<div class="terminal">&gt; SYSTEM FAILURE DETECTED.
+&gt; NETWORK STABILITY: 0%.
+&gt; RECOVERY PROTOCOL ACTIVATED.
+&gt; GOOD LUCK, OPERATORS.</div>
+
+<p class="footer">CIT: 404 — Recovery Protocol · INPT Rabat 2026</p>
+
+</div>
+</body>
+</html>
