@@ -3,10 +3,22 @@
   "version": 1,
   "generated_for": "CIT:404 player-facing catalog seed",
   "score_matrix": {
-    "1": { "reward": 50, "core_energy": 10 },
-    "2": { "reward": 100, "core_energy": 20 },
-    "3": { "reward": 150, "core_energy": 30 },
-    "4": { "reward": 300, "core_energy": 60 }
+    "1": {
+      "reward": 50,
+      "core_energy": 10
+    },
+    "2": {
+      "reward": 100,
+      "core_energy": 20
+    },
+    "3": {
+      "reward": 150,
+      "core_energy": 30
+    },
+    "4": {
+      "reward": 300,
+      "core_energy": 60
+    }
   },
   "resource_types": {
     "EXTERNAL": "Player follows a link to an external platform or site.",
@@ -153,13 +165,13 @@
       "code": "CTF-OS-02",
       "category": "CTF",
       "subcategory": "OSINT",
-      "title": "la salle",
+      "title": "CIT",
       "difficulty": 2,
       "reward": 100,
       "core_energy": 20,
       "resource_type": "STATIC",
       "resource_url": null,
-      "description": "A real-world location holds the answer. Use open mapping sources to pinpoint the place described and uncover what is tied to it."
+      "description": "fin kaytjam3o drary diyal CIT."
     },
     {
       "code": "CTF-OS-03",
@@ -169,8 +181,8 @@
       "difficulty": 1,
       "reward": 50,
       "core_energy": 10,
-      "resource_type": "STATIC",
-      "resource_url": null,
+      "resource_type": "EXTERNAL",
+      "resource_url": "https://github.com/CIT-challeges/project",
       "description": "The answer is published out in the open on one of CIT's public social media presences. Go find the account and look closely."
     },
     {
@@ -254,8 +266,8 @@
       "reward": 100,
       "core_energy": 20,
       "resource_type": "SERVICE",
-      "resource_url": null,
-      "description": "A login-backed web app trusts its input a little too much. Probe how the application builds its database queries and get past the gate."
+      "resource_url": "https://citchallenge1.pythonanywhere.com/",
+      "description": "yak nta hackor"
     },
     {
       "code": "CTF-WE-02",
@@ -266,8 +278,8 @@
       "reward": 50,
       "core_energy": 10,
       "resource_type": "SERVICE",
-      "resource_url": null,
-      "description": "You have more choices than the interface shows. Examine how the app references individual records and try reaching ones that were not meant for you."
+      "resource_url": "https://citchallenge.pythonanywhere.com/",
+      "description": "You have more choices than you think."
     },
     {
       "code": "CTF-WE-03",

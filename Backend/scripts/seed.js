@@ -134,8 +134,7 @@ async function main() {
     // These run AFTER the upsert so they are not overwritten by is_active=TRUE.
     await db.query(`
         -- Deactivate web challenges (no AWS host deployed)
-        UPDATE challenges SET is_active = false
-          WHERE code IN ('CTF-WE-01','CTF-WE-02','CTF-WE-03');
+        UPDATE challenges SET is_active = false WHERE code = 'CTF-WE-03';
 
         -- CTF hints
         UPDATE challenges SET hint1='Base64.' WHERE code='CTF-CR-01';
@@ -195,6 +194,9 @@ async function main() {
         UPDATE challenges SET resource_type='DOWNLOAD', resource_url='/challs/st02-signal.wav' WHERE code='CTF-ST-02';
         UPDATE challenges SET resource_type='SERVICE', resource_url='nc altaria.proxy.rlwy.net 36043' WHERE code='CTF-MI-02';
         UPDATE challenges SET resource_type='EXTERNAL', resource_url='https://cit-challenges.github.io/wayback-machine-challenge/' WHERE code='CTF-OS-01';
+        UPDATE challenges SET resource_type='EXTERNAL', resource_url='https://github.com/CIT-challeges/project' WHERE code='CTF-OS-03';
+        UPDATE challenges SET resource_type='SERVICE', resource_url='https://citchallenge1.pythonanywhere.com/' WHERE code='CTF-WE-01';
+        UPDATE challenges SET resource_type='SERVICE', resource_url='https://citchallenge.pythonanywhere.com/' WHERE code='CTF-WE-02';
     `);
 
     challenges.forEach((c) => console.log(
