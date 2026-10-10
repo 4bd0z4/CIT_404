@@ -1,0 +1,56 @@
+# CIT CTF — Caddy reverse proxy.
+#
+# Routes two HTTP(S) subdomains to the internal Flask challenges. Caddy
+# terminates TLS and automatically provisions Let's Encrypt certificates
+# once the domains resolve to this host's Elastic IP (ports 80 + 443 open).
+#
+# Replace the ${CHALLENGE_DOMAIN} placeholders by setting the env var in the
+# container (compose passes it through) OR hardcode your domain here before
+# deploy. Example domain: chall.example.com -> sqli.chall.example.com, etc.
+#
+# The eval-jail challenge is NOT proxied here — it is a raw TCP service
+# published directly on port 9000.
+
+{
+	# Operational email for ACME/Let's Encrypt expiry notices.
+	email {$CADDY_ACME_EMAIL:admin@example.com}
+	# To test without hitting LE rate limits, uncomment the staging CA:
+	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+# ---- SQL injection challenge --------------------------------------------
+sqli.{$CHALLENGE_DOMAIN:chall.example.com} {
+	encode gzip
+	reverse_proxy sqli:5000
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+		-Server
+	}
+	log {
+		output stdout
+		format console
+	}
+}
+
+# ---- IDOR challenge ------------------------------------------------------
+idor.{$CHALLENGE_DOMAIN:chall.example.com} {
+	encode gzip
+	reverse_proxy idor:5000
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+		-Server
+	}
+	log {
+		output stdout
+		format console
+	}
+}
+
+# ---- Fallback: anything else gets a 404 (no default host leakage) --------
+:80 {
+	respond "Not found" 404
+}

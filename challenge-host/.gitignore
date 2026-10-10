@@ -1,0 +1,14 @@
+# Never commit real secrets / flags.
+.env
+*.env
+!.env.example
+
+# Python junk (should never be copied into images anyway).
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Local scratch DBs.
+*.db

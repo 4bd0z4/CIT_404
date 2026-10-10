@@ -69,7 +69,7 @@ CREATE TABLE admins (
     username      VARCHAR(64) UNIQUE NOT NULL,
     password_hash TEXT        NOT NULL,   -- bcrypt
     role          VARCHAR(16) NOT NULL DEFAULT 'admin'
-                  CHECK (role IN ('admin', 'superadmin')),
+                  CHECK (role IN ('admin', 'mission_admin', 'superadmin')),
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -142,6 +142,11 @@ CREATE TABLE challenges (
     first_blood_energy INTEGER NOT NULL DEFAULT 0 CHECK (first_blood_energy >= 0),
     title       VARCHAR(128) NOT NULL,
     description TEXT,
+    subcategory VARCHAR(32),
+    resource_type VARCHAR(16) NOT NULL DEFAULT 'STATIC'
+                  CHECK (resource_type IN ('STATIC','EXTERNAL','DOWNLOAD','SERVICE')),
+    resource_url TEXT,
+    instructions TEXT,
     -- Le flag est HASHE : un dump de la base ne donne pas les reponses.
     flag_hash   TEXT         NOT NULL,
     is_active   BOOLEAN      NOT NULL DEFAULT TRUE
@@ -207,6 +212,17 @@ CREATE TABLE mission_tiers (
     PRIMARY KEY (mission_id, difficulty)
 );
 
+-- Each tier offers several field tasks; the platform assigns ONE at random
+-- when a team deploys, so teams cannot cherry-pick the easiest task.
+CREATE TABLE mission_tasks (
+    id          SERIAL PRIMARY KEY,
+    mission_id  INTEGER     NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
+    difficulty  VARCHAR(8)  NOT NULL CHECK (difficulty IN ('EASY','MEDIUM','HARD')),
+    label       VARCHAR(64) NOT NULL,
+    description TEXT        NOT NULL
+);
+CREATE INDEX idx_mission_tasks ON mission_tasks (mission_id, difficulty);
+
 -- Une ligne = cette equipe a debloque l'acces a cette mission.
 CREATE TABLE team_mission_access (
     team_id     INTEGER     NOT NULL REFERENCES teams(id)    ON DELETE CASCADE,
@@ -227,6 +243,7 @@ CREATE TABLE team_missions (
     purchased_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deadline_at   TIMESTAMPTZ,
     resolved_at   TIMESTAMPTZ,
+    assigned_task_id INTEGER  REFERENCES mission_tasks(id) ON DELETE SET NULL,
     resolved_by   INTEGER     REFERENCES admins(id) ON DELETE SET NULL
 );
 CREATE UNIQUE INDEX idx_one_active_purchase
@@ -339,7 +356,7 @@ CREATE TABLE ledger (
     kind          VARCHAR(24) NOT NULL CHECK (kind IN (
                       'CHALLENGE_REWARD','FIRST_BLOOD','ITEM_PURCHASE','ITEM_USE',
                       'MISSION_PURCHASE','MISSION_REWARD','ENDGAME_REWARD',
-                      'NOTIF_REWARD','NOTIF_PENALTY','ADMIN_ADJUST','SEED'
+                      'NOTIF_REWARD','NOTIF_PENALTY','DCR_REWARD','ADMIN_ADJUST','SEED'
                   )),
     -- Signe : positif = credit, negatif = debit. 0 pour un ITEM_USE.
     amount        INTEGER     NOT NULL,
@@ -360,6 +377,83 @@ CREATE TABLE ledger (
 CREATE INDEX idx_ledger_team ON ledger (team_id, created_at DESC);
 CREATE INDEX idx_ledger_kind ON ledger (kind, created_at DESC);
 CREATE INDEX idx_ledger_feed ON ledger (created_at DESC);
+
+-- =====================================================================
+--  DCR — DATA CORE RETRIEVAL
+-- =====================================================================
+
+-- DCR tables for the GAME database (the one that holds teams, ledger,
+-- sessions). NOT the DCR data database. Run once as the owner of the game
+-- database. Safe to re-run.
+--
+-- The type of team_id is read from teams.id so the foreign key matches
+-- whatever that column is (integer, bigint, uuid, ...).
+
+DO $$
+DECLARE
+  team_type text := 'integer';
+  fk        text := '';
+BEGIN
+  IF to_regclass('public.teams') IS NOT NULL THEN
+    SELECT format_type(a.atttypid, a.atttypmod) INTO team_type
+      FROM pg_attribute a
+     WHERE a.attrelid = 'public.teams'::regclass AND a.attname = 'id' AND NOT a.attisdropped;
+    fk := ' REFERENCES teams (id)';
+  END IF;
+
+  CREATE TABLE IF NOT EXISTS dcr_missions (
+    id                   text PRIMARY KEY,                       -- 'M01' ... 'M15'
+    level                integer NOT NULL CHECK (level BETWEEN 1 AND 4),
+    title                text NOT NULL,
+    story                text NOT NULL,
+    question             text NOT NULL,
+    answer_format        text NOT NULL,
+    reward_cit           integer NOT NULL CHECK (reward_cit >= 0),
+    reward_ce            integer NOT NULL CHECK (reward_ce >= 0),
+    prerequisite         text REFERENCES dcr_missions (id),      -- M04 <- M03, M10 <- M09
+    first_blood_eligible boolean NOT NULL DEFAULT false,         -- levels 2, 3, 4
+    answer_hash          text NOT NULL,                          -- HMAC-SHA256, never the answer itself
+    epilogue             text                                    -- only M15
+  );
+
+  EXECUTE format($f$
+    CREATE TABLE IF NOT EXISTS dcr_solves (
+      team_id     %s NOT NULL%s,
+      mission_id  text NOT NULL REFERENCES dcr_missions (id),
+      nickname    text NOT NULL,
+      solved_at   timestamptz NOT NULL DEFAULT now(),
+      first_blood boolean NOT NULL DEFAULT false,
+      cit_paid    integer NOT NULL,
+      ce_paid     integer NOT NULL,
+      PRIMARY KEY (team_id, mission_id)                          -- paid once per team and mission
+    )$f$, team_type, fk);
+
+  EXECUTE format($f$
+    CREATE TABLE IF NOT EXISTS dcr_attempts (
+      attempt_id   bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+      team_id      %s NOT NULL%s,
+      mission_id   text NOT NULL REFERENCES dcr_missions (id),
+      nickname     text NOT NULL,
+      correct      boolean NOT NULL,
+      submitted_at timestamptz NOT NULL DEFAULT now()
+    )$f$, team_type, fk);
+
+  EXECUTE format($f$
+    CREATE TABLE IF NOT EXISTS dcr_query_log (
+      query_id   bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+      team_id    %s NOT NULL%s,
+      nickname   text,
+      sql_text   text NOT NULL,
+      ok         boolean NOT NULL,
+      ms         integer,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )$f$, team_type, fk);
+END $$;
+
+CREATE INDEX IF NOT EXISTS dcr_attempts_recent_idx ON dcr_attempts (team_id, mission_id, submitted_at DESC);
+CREATE INDEX IF NOT EXISTS dcr_solves_mission_idx  ON dcr_solves (mission_id, solved_at);
+CREATE INDEX IF NOT EXISTS dcr_query_log_team_idx  ON dcr_query_log (team_id, created_at DESC);
+
 
 -- =====================================================================
 --  VUES POUR LA PLATEFORME ADMIN

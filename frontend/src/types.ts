@@ -22,7 +22,7 @@ export interface AdminSubject {
   kind: 'admin'
   adminId: number
   username: string
-  role: 'admin' | 'superadmin'
+  role: 'admin' | 'mission_admin' | 'superadmin'
 }
 
 export type Subject = TeamSubject | AdminSubject
@@ -87,6 +87,7 @@ export interface Challenge {
   id: number
   code: string
   category: Category
+  subcategory: 'Crypto' | 'OSINT' | 'Misc' | 'Steganography' | 'Web' | null
   difficulty: number
   reward: number
   core_energy: number
@@ -94,6 +95,9 @@ export interface Challenge {
   first_blood_energy: number
   title: string
   description: string | null
+  resource_type: 'STATIC' | 'EXTERNAL' | 'DOWNLOAD' | 'SERVICE'
+  resource_url: string | null
+  instructions: string | null
   solved: boolean
   first_blood_taken: boolean
 }

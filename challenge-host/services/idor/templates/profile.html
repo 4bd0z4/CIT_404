@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CIT — Profil Membre</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body class="profile-body">
+
+  <!-- ─── Top bar ─── -->
+  <nav class="top-bar">
+    <a href="/" class="bar-brand">
+      <img src="{{ url_for('static', filename='cit-logo.png') }}" alt="CIT" class="bar-logo" />
+    </a>
+    <div class="bar-right">
+      <span class="bar-label">RÉPERTOIRE DES MEMBRES</span>
+    </div>
+  </nav>
+
+  <!-- ─── Profile content ─── -->
+  <main class="profile-wrap">
+
+
+    {% if flag %}
+    <!-- ═══ FLAG CARD ═══ -->
+    <div class="card card-flag animate-in">
+      <div class="card-header flag-header">
+        <span class="badge badge-flag">🏴 TOP SECRET</span>
+      </div>
+      <div class="card-body">
+        <div class="member-info">
+          <div class="avatar avatar-flag">
+            <span>B</span>
+          </div>
+          <div class="details">
+            <h2 class="member-name">BEN MESBAH Yassine</h2>
+            <p class="member-role role-flag">Président du Club</p>
+            <span class="member-id">ID: 0</span>
+          </div>
+        </div>
+        <hr class="divider" />
+        <div class="flag-box">
+          <span class="flag-label">FLAG</span>
+          <code class="flag-value">{{ flag_value }}</code>
+        </div>
+      </div>
+    </div>
+
+    {% elif member %}
+    <!-- ═══ MEMBER CARD ═══ -->
+    <div class="card card-member animate-in">
+      <div class="card-body">
+        <div class="member-info">
+          <div class="avatar">
+            <span>{{ member.name[0] }}</span>
+          </div>
+          <div class="details">
+            <h2 class="member-name">{{ member.name }}</h2>
+            <p class="member-role">{{ member.role }}</p>
+            <span class="member-id">ID: {{ member_id }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% elif error %}
+    <!-- ═══ ERROR CARD ═══ -->
+    <div class="card card-error animate-in">
+      <div class="card-body">
+        <span class="err-icon">✖</span>
+        <p class="err-msg">{{ message }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <a href="/" class="back-link">← Retour au Couloir</a>
+  </main>
+</body>
+</html>

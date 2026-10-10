@@ -8,13 +8,20 @@ require('dotenv').config();
 
 const rt = require('./lib/realtime');
 const economy = require('./lib/economy');
-const { attachAuth, socketAuth } = require('./middleware/auth');
+const phase = require('./lib/phase');
+const db = require('./db_config');
+const { attachAuth, socketAuth, requireTeam } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/game');
 const adminRoutes = require('./routes/admin');
+const dcrRoutes = require('./routes/dcr');
+const dcrQueryRoutes = require('./routes/dcrQuery');
+
+dcrRoutes.setAwardCallback((client, ctx) => economy.creditDcr(client, ctx));
 
 const app = express();
 const server = http.createServer(app);
+app.set('gamePool', db.pool);
 
 // The React dev server runs on its own origin, so CORS has to allow
 // credentials for the httpOnly refresh cookie to travel.
@@ -65,6 +72,8 @@ app.get('/api/health', (_req, res) => res.json({ status: 'THE CORE IS LISTENING'
 
 app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
+app.use('/api/dcr', requireTeam, phase.requirePhase('CHALLENGES'), dcrRoutes);
+app.use('/api/data', requireTeam, phase.requirePhase('CHALLENGES'), dcrQueryRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Serve the built React app in production.

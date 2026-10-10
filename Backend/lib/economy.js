@@ -356,14 +356,24 @@ async function purchaseMission({ teamId, operatorId, missionCode, difficulty }) 
             ? new Date(Date.now() + tier.time_limit_min * 60_000)
             : null;
 
+        // Randomly assign one task from this mission + difficulty, so teams
+        // cannot cherry-pick. SPECIAL missions may have no task list.
+        const { rows: taskRows } = await client.query(
+            `SELECT id, label, description FROM mission_tasks
+              WHERE mission_id = $1 AND difficulty = $2
+              ORDER BY random() LIMIT 1`,
+            [mission.id, difficulty]
+        );
+        const assignedTask = taskRows[0] || null;
+
         let teamMission;
         try {
             const { rows } = await client.query(
                 `INSERT INTO team_missions
-                   (team_id, mission_id, difficulty, status, paid_amount, deadline_at)
-                 VALUES ($1,$2,$3,'PURCHASED',$4,$5)
+                   (team_id, mission_id, difficulty, status, paid_amount, deadline_at, assigned_task_id)
+                 VALUES ($1,$2,$3,'PURCHASED',$4,$5,$6)
                  RETURNING *`,
-                [teamId, mission.id, difficulty, tier.entry_cost, deadline]
+                [teamId, mission.id, difficulty, tier.entry_cost, deadline, assignedTask ? assignedTask.id : null]
             );
             teamMission = rows[0];
         } catch (err) {
@@ -376,7 +386,7 @@ async function purchaseMission({ teamId, operatorId, missionCode, difficulty }) 
             missionId: mission.id, note: `${mission.mission_name} (${difficulty})`,
         });
 
-        return { wallet, mission, tier, teamMission, teamName: team.team_name };
+        return { wallet, mission, tier, teamMission, assignedTask, teamName: team.team_name };
     });
 }
 
@@ -575,6 +585,24 @@ async function expireOverdueNotifications() {
     return results;
 }
 
+/**
+ * Credits one DCR mission reward inside the caller's existing transaction.
+ * The caller must lock the team row before the DCR mission row to preserve
+ * the global lock order. DCR handles its own first-blood calculation.
+ */
+async function creditDcr(client, {
+    teamId, operatorId, missionId, cit, ce, firstBlood = false,
+}) {
+    return applyDelta(client, {
+        teamId,
+        operatorId,
+        amount: cit,
+        energy: ce,
+        kind: 'DCR_REWARD',
+        note: `DCR ${missionId}${firstBlood ? ' (first blood)' : ''}`,
+    });
+}
+
 // ---------------------------------------------------------------------
 // ADMIN
 // ---------------------------------------------------------------------
@@ -628,6 +656,7 @@ module.exports = {
     purchaseItem,
     useItem,
     creditChallenge,
+    creditDcr,
     unlockMission,
     purchaseMission,
     resolveMission,

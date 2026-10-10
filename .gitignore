@@ -7,3 +7,14 @@ dist/
 # Outils locaux
 .claude/
 *.tsbuildinfo
+
+# Organizer-only challenge/DCR inputs
+**/*.private.json
+**/answer_hashes.json
+
+# Event guide build artifacts (keep .tex + .pdf only)
+event-guide/*.aux
+event-guide/*.log
+event-guide/*.out
+event-guide/*.toc
+event-guide/page-*.png
