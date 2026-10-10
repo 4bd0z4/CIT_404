@@ -181,9 +181,9 @@
       "difficulty": 1,
       "reward": 50,
       "core_energy": 10,
-      "resource_type": "EXTERNAL",
-      "resource_url": "https://github.com/CIT-challeges/project",
-      "description": "The answer is published out in the open on one of CIT's public social media presences. Go find the account and look closely."
+      "resource_type": "STATIC",
+      "resource_url": "",
+      "description": "3lach bagi madayrch lina follow?"
     },
     {
       "code": "CTF-MI-01",
@@ -194,7 +194,7 @@
       "reward": 50,
       "core_energy": 10,
       "resource_type": "EXTERNAL",
-      "resource_url": null,
+      "resource_url": "https://github.com/CIT-challeges/project",
       "description": "Learn to work with version control. The answer lives somewhere in the history of a provided repository, not just its latest state."
     },
     {
