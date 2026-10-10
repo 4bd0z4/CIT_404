@@ -14,7 +14,7 @@ interface Row {
 }
 
 const variantOf = (rank: number) =>
-  rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : undefined
+  Number(rank) === 1 ? 'gold' : Number(rank) === 2 ? 'silver' : Number(rank) === 3 ? 'bronze' : undefined
 
 /**
  * Venue projector view: /scoreboard. Public and read-only, no login, sized

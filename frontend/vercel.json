@@ -8,6 +8,10 @@
     {
       "source": "/socket.io/:path*",
       "destination": "https://cit404-production.up.railway.app/socket.io/:path*"
+    },
+    {
+      "source": "/((?!api/|socket.io/|assets/).*)",
+      "destination": "/index.html"
     }
   ]
 }

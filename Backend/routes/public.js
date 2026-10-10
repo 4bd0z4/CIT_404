@@ -43,9 +43,9 @@ router.get('/score-history', async (_req, res, next) => {
         const series = await cached('score-history', async () => {
             const { rows } = await db.query(
                 `WITH top AS (
-                     SELECT id, team_name
-                       FROM v_leaderboard JOIN teams USING (team_name)
-                      ORDER BY rank LIMIT 10
+                     SELECT t.id, t.team_name
+                       FROM v_leaderboard v JOIN teams t ON t.team_name = v.team_name
+                      ORDER BY v.rank LIMIT 10
                  )
                  SELECT top.team_name, l.created_at AS t, l.energy_after AS score
                    FROM top

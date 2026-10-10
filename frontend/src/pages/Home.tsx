@@ -127,7 +127,7 @@ export function Home() {
                 const top = board.slice(0, 8)
                 const maxEnergy = Math.max(1, ...top.map((r) => r.core_energy))
                 const medal = (rank: number) =>
-                  rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : undefined
+                  Number(rank) === 1 ? 'gold' : Number(rank) === 2 ? 'silver' : Number(rank) === 3 ? 'bronze' : undefined
                 return top.map((row, i) => {
                   const isMine = row.team_name === team?.teamName
                   const variant = medal(row.rank)
