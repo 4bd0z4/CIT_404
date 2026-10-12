@@ -13,7 +13,6 @@ import { Missions } from '@/pages/Missions'
 import { Endgame } from '@/pages/Endgame'
 import { Market } from '@/pages/Market'
 import { Story } from '@/pages/Story'
-import { Scoreboard } from '@/pages/Scoreboard'
 import { NetworkBackground } from '@/components/NetworkBackground'
 
 /**
@@ -45,8 +44,10 @@ export function App() {
     <Suspense fallback={<BootScreen message="LOADING MODULE" />}>
       <NetworkBackground />
       <Routes>
-        {/* Public projector view for the venue screen. */}
-        <Route path="/scoreboard" element={<Scoreboard />} />
+        {/* Public projector view DISABLED after the event — the live
+            scoreboard is hidden; the final report lives at /rapport.html.
+            To re-enable, restore: <Route path="/scoreboard" element={<Scoreboard />} /> */}
+        <Route path="/scoreboard" element={<Navigate to="/" replace />} />
 
         {/* ---------------- OPERATOR ---------------- */}
       <Route

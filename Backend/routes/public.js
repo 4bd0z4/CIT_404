@@ -15,6 +15,14 @@ const router = express.Router();
 const TTL_MS = 5000;
 const cache = new Map();
 
+// The live scoreboard is hidden after the event. These endpoints return 404
+// so the public standings cannot be scraped directly. The final results live
+// in the static report (/rapport.html). To re-enable the live board, remove
+// this guard.
+router.use((_req, res) => {
+    res.status(404).json({ error: 'NOT FOUND' });
+});
+
 async function cached(key, loader) {
     const hit = cache.get(key);
     const now = Date.now();
