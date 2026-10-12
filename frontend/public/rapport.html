@@ -349,6 +349,11 @@
           <div class="value">20</div>
           <div class="sub">TEAM 8 &amp; TEAM 5</div>
         </div>
+        <div class="stat">
+          <div class="label">Endgame Recovered</div>
+          <div class="value" id="s-endgame">4</div>
+          <div class="sub">TEAM 7 · 3 · 9 · 8</div>
+        </div>
       </div>
 
       <!-- First bloods leaderboard -->
@@ -378,7 +383,7 @@
         { team: 'TEAM 7',  energy: 717, solved: 17, fb: 9, endgame: 1 },
         { team: 'TEAM 9',  energy: 654, solved: 17, fb: 4, endgame: 1 },
         { team: 'TEAM 8',  energy: 614, solved: 20, fb: 3, endgame: 1 },
-        { team: 'TEAM 3',  energy: 575, solved: 16, fb: 4, endgame: 0 },
+        { team: 'TEAM 3',  energy: 575, solved: 16, fb: 4, endgame: 1 },
         { team: 'TEAM 1',  energy: 497, solved: 13, fb: 1, endgame: 0 },
         { team: 'TEAM 5',  energy: 460, solved: 20, fb: 3, endgame: 0 },
         { team: 'TEAM 4',  energy: 330, solved: 18, fb: 2, endgame: 0 },
@@ -444,6 +449,7 @@
       // ---- Derived stat totals ----
       document.getElementById('s-fb').textContent = TEAMS.reduce((s, t) => s + t.fb, 0);
       document.getElementById('s-teams').textContent = TEAMS.length;
+      document.getElementById('s-endgame').textContent = TEAMS.filter((t) => t.endgame).length;
     </script>
   </body>
 </html>
